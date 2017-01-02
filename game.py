@@ -35,18 +35,22 @@ def makeLine(mouseX,mouseY,target,drawingLine):
         return 3
     return 2
     
-def moveObject(objectRect, mouseX, mouseY):
-    relativeX = mouseX-objectRect.left
-    relativeY = mouseY-objectRect.top
-    objectRect.topleft = (mouseX+relativeX,mouseY+relativeY)
-
 def Delete(object):
     for line in loadedLines[:]:
         if line[0][1] == object or line[1][1] == object:
             loadedLines.remove(line)
     loadedGates.remove(object)
     
-    
+def Click(clickCoords):
+    for switch in loadedSwitches:
+        if switch[1].collidepoint(mouseX,mouseY):
+            if switch[2]:
+                switch[0] = pygame.image.load("gatePics\OFF.png")
+                switch[2] = False
+            else:
+                switch[0] = pygame.image.load("gatePics\ON.png")
+                switch[2] = True
+            
 pygame.init()
 
 size = width, height = 800, 600
@@ -56,6 +60,7 @@ white = 255, 255, 255
 black = 0,0,0
 red = 255,0,0
 
+clickCoords = 0,0
 mouseX,mouseY = 0,0
 mouseKey = 0;
 
@@ -89,12 +94,15 @@ while True:
             if(event.button <4):
                 tempbuttons[event.button-1] = 1
                 mouseKey = tuple(tempbuttons)
+                clickCoords = event.pos
         if event.type == pygame.MOUSEBUTTONUP:
             if drawingLine == 3: drawingLine = False
             tempbuttons = [0,0,0]
             if(event.button <4):
                 tempbuttons[event.button-1] = 0
                 mouseKey = tuple(tempbuttons)
+            if(math.sqrt((clickCoords[0]-event.pos[0])**2 + (clickCoords[1]-event.pos[1])**2)<2):
+                Click(clickCoords)
         if event.type == pygame.MOUSEMOTION: 
             mouseX,mouseY = event.pos
             mouseKey = event.buttons
@@ -102,7 +110,6 @@ while True:
     #Move gate/switch if cursor clicks&drags     
     if draggingObject and not drawingLine:
         draggingObject[1].center = mouseX, mouseY
-        #moveObject(draggingObject[1], mouseX, mouseY) 
     elif mouseKey[0] == 1:
         for gate in loadedGates:
             if gate[1].collidepoint(mouseX,mouseY):
@@ -142,7 +149,7 @@ while True:
             pygame.mouse.set_cursor(*pygame.cursors.diamond)
         #Spawn switches
         if switchButtonRect.collidepoint(mouseX,mouseY):
-            loadedSwitches.append(makeSwitch())
+            loadedSwitches.append(list(makeSwitch()))
             
     #Start Drawing
     screen.fill(white) 
