@@ -1,16 +1,18 @@
 import sys, pygame, math
 
+# A gate is a list [image, rect, gate_name_string, connections_on_inputs] 
 def makeGate(name):
     gate = pygame.image.load("gatePics\\" + name + ".png")
     gateRect = gate.get_rect()
     gateRect.center = mouseX,mouseY 
-    return(gate,gateRect,name,[])
+    return([gate,gateRect,name,[]])
 
+# A switch is a list [image, rect, on/off, dummy_array] 
 def makeSwitch():
     switch = pygame.image.load("gatePics\OFF.png")
     switchRect = switch.get_rect()
     switchRect.center = mouseX,mouseY 
-    return(switch,switchRect,False,[])
+    return([switch,switchRect,False,[]])
     
 #A line is a matrix list [[start_target_edge, start_target , start_coords],[end_target_edge, end_target, end_coords]]    
 def makeLine(mouseX,mouseY,target,drawingLine):
@@ -19,7 +21,12 @@ def makeLine(mouseX,mouseY,target,drawingLine):
     anchor = None
     # if drawingLine == 1 -> set line start, if == 2 -> set line end,
     # if == 3 -> set drawingLine to False on next mouseup
-    if mouseRelativeX > 2*(target[1].width/3):
+    
+    #check if switch
+    if type(target[2]) == type(True):
+        anchor = 4
+    #otherwise its a gate    
+    elif mouseRelativeX > 2*(target[1].width/3):
         anchor = 1
     elif mouseRelativeX < target[1].width/3:
         if target[2] == 'NOT':
@@ -32,8 +39,11 @@ def makeLine(mouseX,mouseY,target,drawingLine):
         loadedLines.append([[anchor,target,(mouseX,mouseY)],[None,None,None]])
     elif anchor != loadedLines[-1][0][0]:    
         loadedLines[-1][1] = [anchor,target,(mouseX,mouseY)]
-        target[3].append(loadedLines[-1][0])
         pygame.mouse.set_cursor(*pygame.cursors.arrow)
+        if anchor == 1 or anchor == 4:
+            loadedLines[-1][0][1][3] = target
+        else:
+            target[3].append(loadedLines[-1][0][1])
         return 3
     return 2
     
@@ -58,14 +68,15 @@ def DeleteLine(line):
     loadedLines.remove(line)
     
 def Click(clickCoords):
-    for switch in loadedSwitches:
-        if switch[1].collidepoint(mouseX,mouseY):
-            if switch[2]:
-                switch[0] = pygame.image.load("gatePics\OFF.png")
-                switch[2] = False
-            else:
-                switch[0] = pygame.image.load("gatePics\ON.png")
-                switch[2] = True
+    if not drawingLine:
+        for switch in loadedSwitches:
+            if switch[1].collidepoint(mouseX,mouseY):
+                if switch[2]:
+                    switch[0] = pygame.image.load("gatePics\OFF.png")
+                    switch[2] = False
+                else:
+                    switch[0] = pygame.image.load("gatePics\ON.png")
+                    switch[2] = True
             
 def UpdateLines():
     for line in loadedLines:
@@ -73,14 +84,16 @@ def UpdateLines():
         offset = gate[1].width/10
         for x in range(2):
             target = line[x][1]
-            if line[x][0] == 1:
+            if line[x][0] == 0:
+                newCoords[x] = target[1].midleft[0]+offset, target[1].midleft[1]
+            elif line[x][0] == 1:
                 newCoords[x] = target[1].midright[0]-offset, target[1].midright[1]
             elif line[x][0] == 2:
                 newCoords[x] = target[1].left+offset , target[1].topleft[1] + 3*(target[1].height/4)
             elif line[x][0] == 3:
                 newCoords[x] = target[1].left+offset , target[1].topleft[1] + target[1].height/4
-            elif line[x][0] == 0:
-                newCoords[x] = target[1].midleft[0]+offset, target[1].midleft[1]
+            elif line[x][0] == 4:
+                newCoords[x] = target[1].midright
         line[0][2] = newCoords[0]
         line[1][2] = newCoords[1]
         pygame.draw.line(screen, red, newCoords[0], newCoords[1], 2)
@@ -145,13 +158,13 @@ while True:
     if draggingObject and not drawingLine:
         draggingObject[1].center = mouseX, mouseY
     elif mouseKey[0] == 1:
-        for gate in loadedGates:
-            if gate[1].collidepoint(mouseX,mouseY):
+        for target in loadedGates+loadedSwitches:
+            if target[1].collidepoint(mouseX,mouseY):
                 #maybe draw a line instead
                 if drawingLine:
-                    drawingLine = makeLine(mouseX,mouseY,gate,drawingLine)                   
+                    drawingLine = makeLine(mouseX,mouseY,target,drawingLine)                   
                 else:
-                    draggingObject = gate
+                    draggingObject = target
         #move and flip switches
         for switch in loadedSwitches:
             if switch[1].collidepoint(mouseX,mouseY):
@@ -186,7 +199,7 @@ while True:
             pygame.mouse.set_cursor(*pygame.cursors.diamond)
         #Spawn switches
         if switchButtonRect.collidepoint(mouseX,mouseY):
-            loadedSwitches.append(list(makeSwitch()))
+            loadedSwitches.append(makeSwitch())
             
     #Start Drawing
     screen.fill(white) 
