@@ -4,33 +4,35 @@ def makeGate(name):
     gate = pygame.image.load("gatePics\\" + name + ".png")
     gateRect = gate.get_rect()
     gateRect.center = mouseX,mouseY 
-    return(gate,gateRect,name)
+    return(gate,gateRect,name,[])
 
 def makeSwitch():
     switch = pygame.image.load("gatePics\OFF.png")
     switchRect = switch.get_rect()
     switchRect.center = mouseX,mouseY 
-    return(switch,switchRect,False)
+    return(switch,switchRect,False,[])
     
+#A line is a matrix list [[start_target_edge, start_target , start_coords],[end_target_edge, end_target, end_coords]]    
 def makeLine(mouseX,mouseY,target,drawingLine):
     mouseRelativeX = mouseX-target[1].left
     mouseRelativeY = mouseY-target[1].top
-    coord = None
+    anchor = None
     # if drawingLine == 1 -> set line start, if == 2 -> set line end,
     # if == 3 -> set drawingLine to False on next mouseup
     if mouseRelativeX > 2*(target[1].width/3):
-        coord = 1
+        anchor = 1
     elif mouseRelativeX < target[1].width/3:
         if target[2] == 'NOT':
-            coord = 0
+            anchor = 0
         elif mouseRelativeY > target[1].height/2:
-            coord = 2
+            anchor = 2
         else:
-            coord = 3
+            anchor = 3
     if drawingLine == 1:        
-        loadedLines.append([[coord,target],[None,None]])
-    elif coord != loadedLines[-1][0][0]:
-        loadedLines[-1][1] = [coord,target]
+        loadedLines.append([[anchor,target,(mouseX,mouseY)],[None,None,None]])
+    elif anchor != loadedLines[-1][0][0]:    
+        loadedLines[-1][1] = [anchor,target,(mouseX,mouseY)]
+        target[3].append(loadedLines[-1][0])
         pygame.mouse.set_cursor(*pygame.cursors.arrow)
         return 3
     return 2
@@ -39,7 +41,21 @@ def Delete(object):
     for line in loadedLines[:]:
         if line[0][1] == object or line[1][1] == object:
             loadedLines.remove(line)
-    loadedGates.remove(object)
+    try:
+        loadedGates.remove(object)
+    except:
+        loadedSwitches.remove(object)
+
+def Distance(a,b):
+    return math.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
+
+def IsBetween(startPoint,endPoint,newPoint):
+    return Distance(startPoint,newPoint) + Distance(newPoint,endPoint) - Distance(startPoint,endPoint) < 1    
+        
+def DeleteLine(line):
+    target = line[1][1]
+    target[3].remove(line[0])
+    loadedLines.remove(line)
     
 def Click(clickCoords):
     for switch in loadedSwitches:
@@ -51,6 +67,24 @@ def Click(clickCoords):
                 switch[0] = pygame.image.load("gatePics\ON.png")
                 switch[2] = True
             
+def UpdateLines():
+    for line in loadedLines:
+        newCoords = [None,(mouseX,mouseY)]
+        offset = gate[1].width/10
+        for x in range(2):
+            target = line[x][1]
+            if line[x][0] == 1:
+                newCoords[x] = target[1].midright[0]-offset, target[1].midright[1]
+            elif line[x][0] == 2:
+                newCoords[x] = target[1].left+offset , target[1].topleft[1] + 3*(target[1].height/4)
+            elif line[x][0] == 3:
+                newCoords[x] = target[1].left+offset , target[1].topleft[1] + target[1].height/4
+            elif line[x][0] == 0:
+                newCoords[x] = target[1].midleft[0]+offset, target[1].midleft[1]
+        line[0][2] = newCoords[0]
+        line[1][2] = newCoords[1]
+        pygame.draw.line(screen, red, newCoords[0], newCoords[1], 2)
+        
 pygame.init()
 
 size = width, height = 800, 600
@@ -101,7 +135,7 @@ while True:
             if(event.button <4):
                 tempbuttons[event.button-1] = 0
                 mouseKey = tuple(tempbuttons)
-            if(math.sqrt((clickCoords[0]-event.pos[0])**2 + (clickCoords[1]-event.pos[1])**2)<2):
+            if(Distance(clickCoords, event.pos)<2):
                 Click(clickCoords)
         if event.type == pygame.MOUSEMOTION: 
             mouseX,mouseY = event.pos
@@ -134,6 +168,9 @@ while True:
             drawingLine = False
             if loadedLines and not loadedLines[-1][1]:
                 loadedLines.pop()
+        for line in loadedLines:
+            if IsBetween(line[0][2],line[1][2],(mouseX,mouseY)):
+                DeleteLine(line)
     
     if mouseKey[0] == 1 and not draggingObject:
         #Spawn new gates
@@ -164,20 +201,7 @@ while True:
     for switch in loadedSwitches:
         screen.blit(switch[0],switch[1])
     #draw and update all lines
-    for line in loadedLines:
-        newCoords = [None,(mouseX,mouseY)]
-        offset = gate[1].width/10
-        for x in range(2):
-            target = line[x][1]
-            if line[x][0] == 1:
-                newCoords[x] = target[1].midright[0]-offset, target[1].midright[1]
-            elif line[x][0] == 2:
-                newCoords[x] = target[1].left+offset , target[1].topleft[1] + 3*(target[1].height/4)
-            elif line[x][0] == 3:
-                newCoords[x] = target[1].left+offset , target[1].topleft[1] + target[1].height/4
-            elif line[x][0] == 0:
-                newCoords[x] = target[1].midleft[0]+offset, target[1].midleft[1]
-        pygame.draw.line(screen, red, newCoords[0], newCoords[1], 2)
+    UpdateLines()
     #draw text
     font=pygame.font.Font(None,30)
     info1 = font.render("MousePos: "+str(mouseX) + ", "+str(mouseY), False, black)
