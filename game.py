@@ -1,4 +1,5 @@
 import sys, pygame, math
+from gates import EvaluateLight
 
 # A gate is a list [image, rect, gate_name_string, connections_on_input_anchors] 
 def makeGate(name):
@@ -9,14 +10,14 @@ def makeGate(name):
 
 # A switch is a list [image, rect, on/off, dummy_array] 
 def makeSwitch():
-    switch = pygame.image.load("gatePics\OFF.png")
+    switch = switchOff
     switchRect = switch.get_rect()
     switchRect.center = mouseX,mouseY 
     return([switch,switchRect,False,[]])
 
 # A light is a list [image, rect, on/off, connections] 
 def makeLight():
-    light = pygame.image.load("gatePics\LIGHTOFF.png")
+    light = lightOff
     lightRect = light.get_rect()
     lightRect.center = mouseX,mouseY 
     return([light,lightRect,0,[]])    
@@ -47,15 +48,16 @@ def makeLine(mouseX,mouseY,target,drawingLine):
             anchor = 3
     if drawingLine == 1:        
         loadedLines.append([[anchor,target,(mouseX,mouseY)],[None,None,None]])
+    #inputs must connect to outputs and vis versa
     elif (anchor in [5,0,2,3] and loadedLines[-1][0][0] in [1,4]) or  (anchor in [1,4] and loadedLines[-1][0][0] in [5,0,2,3]):       
         loadedLines[-1][1] = [anchor,target,(mouseX,mouseY)]
         pygame.mouse.set_cursor(*pygame.cursors.arrow)
         if anchor == 1 or anchor == 4:
-            loadedLines[-1][0][1][3] = target
-            print loadedLines[-1][0][1]
+            loadedLines[-1][0][1][3].append(target)
+            #print loadedLines[-1][0][1]
         else:
             target[3].append(loadedLines[-1][0][1])
-            print target
+            #print target
         return 3
     return 2
     
@@ -66,7 +68,10 @@ def Delete(object):
     try:
         loadedGates.remove(object)
     except:
-        loadedSwitches.remove(object)
+        try:
+            loadedSwitches.remove(object)
+        except:
+            loadedLights.remove(object)
 
 def Distance(a,b):
     return math.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
@@ -76,20 +81,30 @@ def IsBetween(startPoint,endPoint,newPoint):
         
 def DeleteLine(line):
     target = line[1][1]
-    print target
-    if target:
-        target[3].remove(line[0])
+    target2 = line[0][1]
+    try:
+        target[3].remove(line[0][1])
+    except:
+        target2[3].remove(line[1][1])
     loadedLines.remove(line)
+
+def turnLight(light, bool):
+    if bool:
+        light[0] = lightOn
+        light[2] = 1
+    else:
+        light[0] = lightOff
+        light[2] = 0
     
 def Click(clickCoords):
     if not drawingLine:
         for switch in loadedSwitches:
             if switch[1].collidepoint(mouseX,mouseY):
                 if switch[2]:
-                    switch[0] = pygame.image.load("gatePics\OFF.png")
+                    switch[0] = switchOff
                     switch[2] = False
                 else:
-                    switch[0] = pygame.image.load("gatePics\ON.png")
+                    switch[0] = switchOn
                     switch[2] = True
             
 def UpdateLines():
@@ -144,6 +159,11 @@ loadedGates = []
 loadedLines = []
 loadedSwitches = []
 loadedLights = []
+
+switchOn = pygame.image.load("gatePics\ON.png")
+switchOff = pygame.image.load("gatePics\OFF.png")
+lightOff = pygame.image.load("gatePics\LIGHTOFF.png")
+lightOn = pygame.image.load("gatePics\LIGHTON.png")
 
 gateSelect = pygame.image.load("gatePics\GATES.png")
 selectRect = gateSelect.get_rect()
@@ -254,6 +274,10 @@ while True:
     info3 = font.render("MouseKey:" + str(mouseKey), False, black)
     screen.blit(info1, (0, height-40))
     screen.blit(info3, (0, height-20))
+    #Run Logic Simulation (turn lights on/off)
+    for light in loadedLights:
+        isOn = EvaluateLight(light)
+        turnLight(light, isOn)
     #Update Screen
     pygame.display.flip()
     

@@ -1,30 +1,68 @@
-def And(first, second, *args):
+def And(first, second=False, *args):
     return all((first,second)+args)
     
-def Or(first, second, *args):
+def Or(first, second=False, *args):
     return any((first,second)+args)
     
 def Not(bool):
     return not bool
    
-def Nor(first, second, *args):
+def Nor(first, second=False, *args):
     return not Or(first, second, *args)
     
-def Nand(first, second, *args):
+def Nand(first, second=False, *args):
     return not And(first, second, *args)
     
-def Xor(first, second):
-    return((first and not second)or(second and not first))
+def Xor(first, second=False, *args):
+    return(args+[first]+[second].count(True) == 1)
     
-def Xnor(first, second):
-    return not Xor(first, second)
+def Xnor(first, second=False, *args):
+    return not Xor(first, second, *args)
+
+def ListToArgs(list):
+    first = list.pop(0)
+    second = list.pop(0)
+    args = (first,second) + tuple(list)
+    return(args)
+
     
-print Not(Or(And(True,False),And(False,True)))
-
-print Nor(False,False,False)
-
-print Nand(True,True,False)
-
-print Xor(False,True)
-
-print Xnor(False,False)
+def EvaluateLight(light):
+    return BuildTree(light)
+    
+def BuildTree(component):
+    name = component[2]
+    connections = component[3]
+    paths = []
+    
+    for path in connections:
+        paths.append(BuildTree(path))        
+       
+    if type(name) == type(True):
+        return name
+    elif paths:
+        if type(name) == type(1):
+            return Or(*paths)
+        elif name == 'NOT':
+            return Not(Or(*paths))
+        elif name == 'AND':
+            return And(*paths)
+        elif name == 'OR':
+            return Or(*paths)
+        elif name == 'NOR':
+            return Nor(*paths)
+        elif name == 'NAND':
+            return Nand(*paths)
+        elif name == 'XOR':
+            return Xor(*paths)
+        elif name == 'XNOR':
+            return Xnor(*paths)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
