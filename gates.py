@@ -14,7 +14,8 @@ def Nand(first, second=False, *args):
     return not And(first, second, *args)
     
 def Xor(first, second=False, *args):
-    return(args+[first]+[second].count(True) == 1)
+    inputs = list(args)+[first]+[second]
+    return(inputs.count(True) == 1)
     
 def Xnor(first, second=False, *args):
     return not Xor(first, second, *args)

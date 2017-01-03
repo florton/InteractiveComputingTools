@@ -64,7 +64,7 @@ def makeLine(mouseX,mouseY,target,drawingLine):
 def Delete(object):
     for line in loadedLines[:]:
         if line[0][1] == object or line[1][1] == object:
-            loadedLines.remove(line)
+            DeleteLine(line)
     try:
         loadedGates.remove(object)
     except:
@@ -83,10 +83,14 @@ def DeleteLine(line):
     target = line[1][1]
     target2 = line[0][1]
     try:
-        target[3].remove(line[0][1])
+        target[3].remove(target2)
     except:
-        target2[3].remove(line[1][1])
+        try:
+            target2[3].remove(target)
+        except:
+            pass
     loadedLines.remove(line)
+    UpdateLights()
 
 def turnLight(light, bool):
     if bool:
@@ -106,6 +110,7 @@ def Click(clickCoords):
                 else:
                     switch[0] = switchOn
                     switch[2] = True
+                UpdateLights()
             
 def UpdateLines():
     for line in loadedLines:
@@ -133,8 +138,14 @@ def UpdateLines():
                 newCoords[x] = target[1].midleft
         line[0][2] = newCoords[0]
         line[1][2] = newCoords[1]
-        pygame.draw.line(screen, red, newCoords[0], newCoords[1], 2)
 
+
+def UpdateLights():
+    #Run Logic Simulation (turn lights on/off)
+    for light in loadedLights:
+        isOn = EvaluateLight(light)
+        turnLight(light, isOn)
+        
 ##Main()
         
 #Initialize variables 
@@ -194,11 +205,12 @@ while True:
                 clickCoords = event.pos
         if event.type == pygame.MOUSEBUTTONUP:
             if drawingLine == 3: drawingLine = False
+            UpdateLights()
             tempbuttons = [0,0,0]
             if(event.button <4):
                 tempbuttons[event.button-1] = 0
                 mouseKey = tuple(tempbuttons)
-            if(Distance(clickCoords, event.pos)<2):
+            if(Distance(clickCoords, event.pos)<2):                
                 Click(clickCoords)
         if event.type == pygame.MOUSEMOTION: 
             mouseX,mouseY = event.pos
@@ -218,7 +230,7 @@ while True:
     if mouseKey[0] == 0 and draggingObject:
         if draggingObject and selectRect.collidepoint(draggingObject[1].center):
             Delete(draggingObject)
-        draggingObject = None     
+        draggingObject = None
     
     #Right Click
     if mouseKey[2] == 1:
@@ -267,17 +279,16 @@ while True:
     for light in loadedLights:
         screen.blit(light[0],light[1])
     #draw and update all lines
-    UpdateLines()
+    if draggingObject or drawingLine:
+        UpdateLines()
+    for line in loadedLines:
+        pygame.draw.line(screen, red, line[0][2], line[1][2], 2)
     #draw text
     font=pygame.font.Font(None,30)
     info1 = font.render("MousePos: "+str(mouseX) + ", "+str(mouseY), False, black)
     info3 = font.render("MouseKey:" + str(mouseKey), False, black)
     screen.blit(info1, (0, height-40))
     screen.blit(info3, (0, height-20))
-    #Run Logic Simulation (turn lights on/off)
-    for light in loadedLights:
-        isOn = EvaluateLight(light)
-        turnLight(light, isOn)
     #Update Screen
     pygame.display.flip()
     
