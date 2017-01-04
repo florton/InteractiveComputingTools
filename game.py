@@ -28,7 +28,7 @@ def makeLine(mouseX,mouseY,target,drawingLine):
     mouseRelativeY = mouseY-target[1].top
     anchor = None
     # if drawingLine == 1 -> set line start, if == 2 -> set line end,
-    # if == 3 -> set drawingLine to False on next mouseup
+    # if == 3 -> set drawingLine to 1 on next mouseup
     
     #check if switch
     if type(target[2]) == type(True):
@@ -46,18 +46,21 @@ def makeLine(mouseX,mouseY,target,drawingLine):
             anchor = 2
         else:
             anchor = 3
+    #if user clicked a non-anchor part of the gate just return
+    else:
+        return drawingLine
     if drawingLine == 1:        
         loadedLines.append([[anchor,target,(mouseX,mouseY)],[None,None,None]])
     #inputs must connect to outputs and vis versa
     elif (anchor in [5,0,2,3] and loadedLines[-1][0][0] in [1,4]) or  (anchor in [1,4] and loadedLines[-1][0][0] in [5,0,2,3]):       
         loadedLines[-1][1] = [anchor,target,(mouseX,mouseY)]
-        pygame.mouse.set_cursor(*pygame.cursors.arrow)
         if anchor == 1 or anchor == 4:
             loadedLines[-1][0][1][3].append(target)
             #print loadedLines[-1][0][1]
         else:
             target[3].append(loadedLines[-1][0][1])
             #print target
+        UpdateLights()
         return 3
     return 2
     
@@ -204,8 +207,8 @@ while True:
                 mouseKey = tuple(tempbuttons)
                 clickCoords = event.pos
         if event.type == pygame.MOUSEBUTTONUP:
-            if drawingLine == 3: drawingLine = False
-            UpdateLights()
+            if drawingLine == 3:
+                drawingLine = 1
             tempbuttons = [0,0,0]
             if(event.button <4):
                 tempbuttons[event.button-1] = 0
@@ -223,9 +226,9 @@ while True:
         for target in loadedGates+loadedSwitches+loadedLights:
             if target[1].collidepoint(mouseX,mouseY):
                 #maybe draw a line instead
-                if drawingLine and drawingLine != 3:
+                if drawingLine and drawingLine!=3:
                     drawingLine = makeLine(mouseX,mouseY,target,drawingLine)                   
-                elif drawingLine != 3:
+                else:
                     draggingObject = target
     if mouseKey[0] == 0 and draggingObject:
         if draggingObject and selectRect.collidepoint(draggingObject[1].center):
@@ -234,16 +237,23 @@ while True:
     
     #Right Click
     if mouseKey[2] == 1:
-        if drawingLine:
-            pygame.mouse.set_cursor(*pygame.cursors.arrow)
-            drawingLine = False
+        #Delete any partially drawn line and stop drawing new lines
+        if drawingLine == 1 or drawingLine == 2:
             if loadedLines and not loadedLines[-1][1]:
                 loadedLines.pop()
+            pygame.mouse.set_cursor(*pygame.cursors.arrow)
+            drawingLine = False
+            continue
+        #Delete existing line
         for line in loadedLines:
             if IsBetween(line[0][2],line[1][2],(mouseX,mouseY)):
                 DeleteLine(line)
+        #Delete gate, light, or switch
+        for object in loadedGates+loadedLights+loadedSwitches:
+            if object[1].collidepoint(mouseX,mouseY):
+                Delete(object)
     
-    if mouseKey[0] == 1 and not draggingObject:
+    if mouseKey[0] == 1 and not draggingObject and not drawingLine:
         #Spawn new gates
         if selectRect.collidepoint(mouseX,mouseY):
             select = (mouseX-selectRect.left)/(selectRect.width/7) 

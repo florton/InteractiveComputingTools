@@ -3,10 +3,7 @@ def And(first, second=False, *args):
     
 def Or(first, second=False, *args):
     return any((first,second)+args)
-    
-def Not(bool):
-    return not bool
-   
+      
 def Nor(first, second=False, *args):
     return not Or(first, second, *args)
     
@@ -36,15 +33,19 @@ def BuildTree(component):
     paths = []
     
     for path in connections:
-        paths.append(BuildTree(path))        
-       
+        result = BuildTree(path)
+        paths.append(result)        
+    
+    if not paths:
+        paths = [False]
+    
     if type(name) == type(True):
         return name
     elif paths:
         if type(name) == type(1):
             return Or(*paths)
         elif name == 'NOT':
-            return Not(Or(*paths))
+            return Nor(*paths)
         elif name == 'AND':
             return And(*paths)
         elif name == 'OR':
@@ -57,7 +58,6 @@ def BuildTree(component):
             return Xor(*paths)
         elif name == 'XNOR':
             return Xnor(*paths)
-        
         
         
         
