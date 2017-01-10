@@ -162,6 +162,7 @@ black = 0,0,0
 red = 255,0,0
 
 clickCoords = 0,0
+clickOffset = 0,0
 mouseX,mouseY = 0,0
 mouseKey = 0;
 
@@ -213,7 +214,7 @@ while True:
             if(event.button <4):
                 tempbuttons[event.button-1] = 0
                 mouseKey = tuple(tempbuttons)
-            if(Distance(clickCoords, event.pos)<2):                
+            if(Distance(clickCoords, event.pos)<10):                
                 Click(clickCoords)
         if event.type == pygame.MOUSEMOTION: 
             mouseX,mouseY = event.pos
@@ -221,7 +222,7 @@ while True:
             
     #Move gate/switch if cursor clicks&drags     
     if draggingObject and not drawingLine:
-        draggingObject[1].center = mouseX, mouseY
+        draggingObject[1].topleft = mouseX - clickOffset[0] , mouseY - clickOffset[1] 
     elif mouseKey[0] == 1:
         for target in loadedGates+loadedSwitches+loadedLights:
             if target[1].collidepoint(mouseX,mouseY):
@@ -229,6 +230,7 @@ while True:
                 if drawingLine and drawingLine!=3:
                     drawingLine = makeLine(mouseX,mouseY,target,drawingLine)                   
                 else:
+                    clickOffset = mouseX-target[1].left , mouseY-target[1].top
                     draggingObject = target
     if mouseKey[0] == 0 and draggingObject:
         if draggingObject and selectRect.collidepoint(draggingObject[1].center):
