@@ -1,26 +1,26 @@
 import sys, pygame, math
 from gates import EvaluateLight
 
-# A gate is a list [image, rect, gate_name_string, connections_on_input_anchors] 
+# A gate is a list [image, rect, gate_name_string, [connections_on_input_anchors], on/off] 
 def makeGate(name):
     gate = pygame.image.load("gatePics\\" + name + ".png")
     gateRect = gate.get_rect()
     gateRect.center = mouseX,mouseY 
-    return([gate,gateRect,name,[]])
+    return([gate,gateRect,name,[],False])
 
-# A switch is a list [image, rect, on/off, dummy_array] 
+# A switch is a list [image, rect, "SWITCH" , [dummy_array],on/off] 
 def makeSwitch():
     switch = switchOff
     switchRect = switch.get_rect()
     switchRect.center = mouseX,mouseY 
-    return([switch,switchRect,False,[]])
+    return([switch,switchRect,"SWITCH",[],False])
 
-# A light is a list [image, rect, on/off, connections] 
+# A light is a list [image, rect, "LIGHT", [connections],on/off] 
 def makeLight():
     light = lightOff
     lightRect = light.get_rect()
     lightRect.center = mouseX,mouseY 
-    return([light,lightRect,0,[]])    
+    return([light,lightRect,"LIGHT",[],False])    
     
 #A line is a matrix list [[start_target_anchor, start_target , start_coords],[end_target_anchor, end_target, end_coords]]    
 def makeLine(mouseX,mouseY,target,drawingLine):
@@ -31,10 +31,10 @@ def makeLine(mouseX,mouseY,target,drawingLine):
     # if == 3 -> set drawingLine to 1 on next mouseup
     
     #check if switch
-    if type(target[2]) == type(True):
+    if target[2] == 'SWITCH':
         anchor = 4
     #else check if light
-    elif type(target[2]) == type(1):
+    elif target[2] == 'LIGHT':
         anchor = 5
     #otherwise its a gate    
     elif mouseRelativeX > 2*(target[1].width/3):
@@ -49,15 +49,21 @@ def makeLine(mouseX,mouseY,target,drawingLine):
     #if user clicked a non-anchor part of the gate just return
     else:
         return drawingLine
-    if drawingLine == 1:        
+    if drawingLine == 1:
+        #make new line with start target info
         loadedLines.append([[anchor,target,(mouseX,mouseY)],[None,None,None]])
     #inputs must connect to outputs and vis versa
     elif (anchor in [5,0,2,3] and loadedLines[-1][0][0] in [1,4]) or  (anchor in [1,4] and loadedLines[-1][0][0] in [5,0,2,3]):       
+        #add end target info to current (last) line
         loadedLines[-1][1] = [anchor,target,(mouseX,mouseY)]
         if anchor == 1 or anchor == 4:
+            #add end target to start target connnections array
             loadedLines[-1][0][1][3].append(target)
             #print loadedLines[-1][0][1]
         else:
+            #add current line to end target connections array
+            #target[3].append(loadedLines[-1])
+            #add start target to end target connections array
             target[3].append(loadedLines[-1][0][1])
             #print target
         UpdateLights()
@@ -98,21 +104,21 @@ def DeleteLine(line):
 def turnLight(light, bool):
     if bool:
         light[0] = lightOn
-        light[2] = 1
+        light[4] = True
     else:
         light[0] = lightOff
-        light[2] = 0
+        light[4] = False
     
 def Click(clickCoords):
     if not drawingLine:
         for switch in loadedSwitches:
             if switch[1].collidepoint(mouseX,mouseY):
-                if switch[2]:
+                if switch[4]:
                     switch[0] = switchOff
-                    switch[2] = False
+                    switch[4] = False
                 else:
                     switch[0] = switchOn
-                    switch[2] = True
+                    switch[4] = True
                 UpdateLights()
             
 def UpdateLines():

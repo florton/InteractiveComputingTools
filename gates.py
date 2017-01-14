@@ -28,21 +28,22 @@ def EvaluateLight(light):
     return BuildTree(light)
     
 def BuildTree(component):
+    #print component
     name = component[2]
     connections = component[3]
     paths = []
     
     for path in connections:
         result = BuildTree(path)
-        paths.append(result)        
-    
+        paths.append(result)   
+        
     if not paths:
-        paths = [False]
-    
-    if type(name) == type(True):
+        paths = [False]  
+        
+    if name == 'SWITCH':
         return name
     elif paths:
-        if type(name) == type(1):
+        if name == 'LIGHT':
             return Or(*paths)
         elif name == 'NOT':
             return Nor(*paths)
