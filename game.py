@@ -169,7 +169,6 @@ def UpdateLights():
 
 
 def UpdateLines():
-    global loadedLines
     for line in loadedLines:
         line[4] = Evaluate(line)
         

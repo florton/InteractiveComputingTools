@@ -17,18 +17,31 @@ def Xor(first, second=False, *args):
 def Xnor(first, second=False, *args):
     return not Xor(first, second, *args)
         
+def CheckLoop(pathList,id):
+    if pathList.count(id) > 1:
+        return True
+    return False
+        
 def Evaluate(component):
+    pathList = []
+    return BuildTree(component,pathList)
+
+def BuildTree(component,pathList):
     name = component[2]
     if name == "LINE":
         connections = [component[0][1]]
+        pathList.append(component[3])
+        if CheckLoop(pathList, component[3]):
+            return False
     else:
         connections = component[3]
     paths = []
-    
+
     for path in connections:
-        result = Evaluate(path)
-        paths.append(result)   
-        
+        result = BuildTree(path,pathList)
+        paths.append(result) 
+    print name        
+    print paths        
     if not paths:
         paths = [False]  
     if name == 'LINE':
