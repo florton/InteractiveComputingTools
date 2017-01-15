@@ -1,5 +1,5 @@
 import sys, pygame, math
-from gates import EvaluateLight
+from gates import Evaluate
 
 # A gate is a list [image, rect, gate_name_string, [connections_on_input_anchors], on/off] 
 def makeGate(name):
@@ -75,6 +75,7 @@ def makeLine(mouseX,mouseY,target,drawingLine):
             target[3].append(loadedLines[-1])
             #print target
         UpdateLights()
+        UpdateLines()
         return 3
     return 2
     
@@ -90,6 +91,7 @@ def Delete(object):
         except:
             loadedLights.remove(object)
 
+    
 def Distance(a,b):
     return math.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
 
@@ -100,14 +102,16 @@ def DeleteLine(line):
     target = line[1][1]
     target2 = line[0][1]
     try:
-        target[3].remove(target2)
+        target[3].remove(line)
     except:
-        try:
-            target2[3].remove(target)
-        except:
-            pass
+        pass
+    try:
+        target2[3].remove(target)
+    except:
+        pass
     loadedLines.remove(line)
     UpdateLights()
+    UpdateLines()
 
 def turnLight(light, bool):
     if bool:
@@ -128,8 +132,9 @@ def Click(clickCoords):
                     switch[0] = switchOn
                     switch[4] = True
                 UpdateLights()
+                UpdateLines()
             
-def UpdateLines():
+def PositionLines():
     for line in loadedLines:
         newCoords = [(mouseX,mouseY),(mouseX,mouseY)]        
         for x in range(2):
@@ -159,13 +164,14 @@ def UpdateLines():
 
 def UpdateLights():
     #Run Logic Simulation (turn lights on/off)
+    for light in loadedLights:
+        turnLight(light, Evaluate(light))
+
+
+def UpdateLines():
     global loadedLines
-    output = EvaluateLight(loadedLights, loadedLines)
-    #print output
-    if len(output[1]) == len(loadedLines):
-        loadedLines = output[1]
-    for i, light in enumerate(loadedLights):
-        turnLight(light, output[0][i])
+    for line in loadedLines:
+        line[4] = Evaluate(line)
         
 ##Main()
         
@@ -312,7 +318,7 @@ while True:
         screen.blit(light[0],light[1])
     #draw and update all lines
     if draggingObject or drawingLine:
-        UpdateLines()
+        PositionLines()
     for line in loadedLines:
         color = red if line[4] else lightRed
         pygame.draw.line(screen, color, line[0][2], line[1][2], 2)

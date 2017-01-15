@@ -19,14 +19,16 @@ def Xnor(first, second=False, *args):
     
 linesList = []  
 
+#Not currently used
 def UpdateLine(id, state):
     global linesList
     for line in linesList:
         if line[3] == id:
             line[4] = state
             return
-  
-def EvaluateLight(lights, lines):
+
+#Not currently Used            
+def EvaluateLights(lights, lines):
     global linesList
     linesList = lines[:]
     lightsList = []
@@ -49,9 +51,7 @@ def BuildTree(component):
     if not paths:
         paths = [False]  
     if name == 'LINE':
-        state = Or(*paths)
-        UpdateLine(component[3], state)
-        return state
+        return Or(*paths)
     elif name == 'SWITCH':
         return component[4]
     elif name == 'LIGHT':
