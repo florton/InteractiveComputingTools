@@ -16,28 +16,23 @@ def Xor(first, second=False, *args):
     
 def Xnor(first, second=False, *args):
     return not Xor(first, second, *args)
-
-def ListToArgs(list):
-    first = list.pop(0)
-    second = list.pop(0)
-    args = (first,second) + tuple(list)
-    return(args)
-
+    
 linesList = []  
-  
-def UpdateLine(component,state):
-    print component
+
+def UpdateLine(id, state):
+    global linesList
     for line in linesList:
-        print line
-        print component
-        if str(component[0]) is str(line[0]) and component[1] is line[1]:
-            line[3] = state
-    
-    
-def EvaluateLight(light, lines):
-    linesList = lines
-    print light
-    return BuildTree(light),linesList
+        if line[3] == id:
+            line[4] = state
+            return
+  
+def EvaluateLight(lights, lines):
+    global linesList
+    linesList = lines[:]
+    lightsList = []
+    for i, light in enumerate(lights):
+        lightsList.append(BuildTree(light))
+    return lightsList,linesList    
     
 def BuildTree(component):
     name = component[2]
@@ -55,7 +50,7 @@ def BuildTree(component):
         paths = [False]  
     if name == 'LINE':
         state = Or(*paths)
-        UpdateLine(component,state)
+        UpdateLine(component[3], state)
         return state
     elif name == 'SWITCH':
         return component[4]

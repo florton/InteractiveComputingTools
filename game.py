@@ -22,7 +22,8 @@ def makeLight():
     lightRect.center = mouseX,mouseY 
     return([light,lightRect,"LIGHT",[],False])    
     
-#A line is a matrix list [[start_target_anchor, start_target , start_coords],[end_target_anchor, end_target, end_coords],"LINE"]    
+#A line is a matrix list [[start_target_anchor, start_target , start_coords],
+#[end_target_anchor, end_target, end_coords],"LINE",id(subject to change),on/off]    
 def makeLine(mouseX,mouseY,target,drawingLine):
     mouseRelativeX = mouseX-target[1].left
     mouseRelativeY = mouseY-target[1].top
@@ -38,8 +39,10 @@ def makeLine(mouseX,mouseY,target,drawingLine):
         anchor = 5
     #otherwise its a gate    
     elif mouseRelativeX > 2*(target[1].width/3):
+        #all gates' output
         anchor = 1
     elif mouseRelativeX < target[1].width/3:
+        #gate inputs
         if target[2] == 'NOT':
             anchor = 0
         elif mouseRelativeY > target[1].height/2:
@@ -50,21 +53,26 @@ def makeLine(mouseX,mouseY,target,drawingLine):
     else:
         return drawingLine
     if drawingLine == 1:
-        #make new line with start target info
-        loadedLines.append([[anchor,target,(mouseX,mouseY)],[None,None,None],"LINE",False])
-    #inputs must connect to outputs and vis versa
-    elif (anchor in [5,0,2,3] and loadedLines[-1][0][0] in [1,4]) or  (anchor in [1,4] and loadedLines[-1][0][0] in [5,0,2,3]):       
-        #add end target info to current (last) line
-        loadedLines[-1][1] = [anchor,target,(mouseX,mouseY)]
+        id = 0 if not loadedLines else loadedLines[-1][3]+1
         if anchor == 1 or anchor == 4:
-            #add end target to start target connnections array
-            loadedLines[-1][0][1][3].append(target)
-            #print loadedLines[-1][0][1]
+            #make new line with start target info
+            loadedLines.append([[anchor,target,(mouseX,mouseY)],[None,None,None],"LINE",id,False])
         else:
+            #make new line with start target info
+            loadedLines.append([[None,None,None],[anchor,target,(mouseX,mouseY)],"LINE",id,False])
             #add current line to end target connections array
             target[3].append(loadedLines[-1])
-            #add start target to end target connections array
-            #target[3].append(loadedLines[-1][0][1])
+    #inputs must connect to outputs and vis versa
+    elif ((anchor in [5,0,2,3] and loadedLines[-1][0][0] in [1,4]) or  (anchor in [1,4] and loadedLines[-1][0][0] in [5,0,2,3])
+    or (anchor in [5,0,2,3] and loadedLines[-1][1][0] in [1,4]) or  (anchor in [1,4] and loadedLines[-1][1][0] in [5,0,2,3])):
+        if anchor == 1 or anchor == 4:
+            #add end target info to current (last) line
+            loadedLines[-1][0] = [anchor,target,(mouseX,mouseY)]
+        else:
+            #add start target info to current (last) line
+            loadedLines[-1][1] = [anchor,target,(mouseX,mouseY)]
+            #add current line to end target connections array
+            target[3].append(loadedLines[-1])
             #print target
         UpdateLights()
         return 3
@@ -123,7 +131,7 @@ def Click(clickCoords):
             
 def UpdateLines():
     for line in loadedLines:
-        newCoords = [None,(mouseX,mouseY)]        
+        newCoords = [(mouseX,mouseY),(mouseX,mouseY)]        
         for x in range(2):
             target = line[x][1]
             offset = target[1].width/10 if target else 0
@@ -152,11 +160,12 @@ def UpdateLines():
 def UpdateLights():
     #Run Logic Simulation (turn lights on/off)
     global loadedLines
-    for light in loadedLights:
-        output = EvaluateLight(light, loadedLines)
-        #print output
+    output = EvaluateLight(loadedLights, loadedLines)
+    #print output
+    if len(output[1]) == len(loadedLines):
         loadedLines = output[1]
-        turnLight(light, output[0])
+    for i, light in enumerate(loadedLights):
+        turnLight(light, output[0][i])
         
 ##Main()
         
@@ -169,7 +178,7 @@ screen = pygame.display.set_mode(size)
 white = 255, 255, 255
 black = 0,0,0
 red = 255,0,0
-lightRed = 255, 100, 100
+lightRed = 255, 180, 180
 
 clickCoords = 0,0
 clickOffset = 0,0
@@ -305,7 +314,7 @@ while True:
     if draggingObject or drawingLine:
         UpdateLines()
     for line in loadedLines:
-        color = red if line[3] else lightRed
+        color = red if line[4] else lightRed
         pygame.draw.line(screen, color, line[0][2], line[1][2], 2)
     #draw text
     font=pygame.font.Font(None,30)
