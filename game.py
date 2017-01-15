@@ -5,7 +5,7 @@ from gates import EvaluateLight
 def makeGate(name):
     gate = pygame.image.load("gatePics\\" + name + ".png")
     gateRect = gate.get_rect()
-    gateRect.center = mouseX,mouseY 
+    gateRect.center = mouseX,mouseY
     return([gate,gateRect,name,[],False])
 
 # A switch is a list [image, rect, "SWITCH" , [dummy_array],on/off] 
@@ -22,7 +22,7 @@ def makeLight():
     lightRect.center = mouseX,mouseY 
     return([light,lightRect,"LIGHT",[],False])    
     
-#A line is a matrix list [[start_target_anchor, start_target , start_coords],[end_target_anchor, end_target, end_coords]]    
+#A line is a matrix list [[start_target_anchor, start_target , start_coords],[end_target_anchor, end_target, end_coords],"LINE"]    
 def makeLine(mouseX,mouseY,target,drawingLine):
     mouseRelativeX = mouseX-target[1].left
     mouseRelativeY = mouseY-target[1].top
@@ -51,7 +51,7 @@ def makeLine(mouseX,mouseY,target,drawingLine):
         return drawingLine
     if drawingLine == 1:
         #make new line with start target info
-        loadedLines.append([[anchor,target,(mouseX,mouseY)],[None,None,None]])
+        loadedLines.append([[anchor,target,(mouseX,mouseY)],[None,None,None],"LINE",False])
     #inputs must connect to outputs and vis versa
     elif (anchor in [5,0,2,3] and loadedLines[-1][0][0] in [1,4]) or  (anchor in [1,4] and loadedLines[-1][0][0] in [5,0,2,3]):       
         #add end target info to current (last) line
@@ -62,9 +62,9 @@ def makeLine(mouseX,mouseY,target,drawingLine):
             #print loadedLines[-1][0][1]
         else:
             #add current line to end target connections array
-            #target[3].append(loadedLines[-1])
+            target[3].append(loadedLines[-1])
             #add start target to end target connections array
-            target[3].append(loadedLines[-1][0][1])
+            #target[3].append(loadedLines[-1][0][1])
             #print target
         UpdateLights()
         return 3
@@ -151,9 +151,12 @@ def UpdateLines():
 
 def UpdateLights():
     #Run Logic Simulation (turn lights on/off)
+    global loadedLines
     for light in loadedLights:
-        isOn = EvaluateLight(light)
-        turnLight(light, isOn)
+        output = EvaluateLight(light, loadedLines)
+        #print output
+        loadedLines = output[1]
+        turnLight(light, output[0])
         
 ##Main()
         
@@ -166,6 +169,7 @@ screen = pygame.display.set_mode(size)
 white = 255, 255, 255
 black = 0,0,0
 red = 255,0,0
+lightRed = 255, 100, 100
 
 clickCoords = 0,0
 clickOffset = 0,0
@@ -220,7 +224,7 @@ while True:
             if(event.button <4):
                 tempbuttons[event.button-1] = 0
                 mouseKey = tuple(tempbuttons)
-            if(Distance(clickCoords, event.pos)<10):                
+            if(Distance(clickCoords, event.pos)<10):  
                 Click(clickCoords)
         if event.type == pygame.MOUSEMOTION: 
             mouseX,mouseY = event.pos
@@ -267,6 +271,7 @@ while True:
             select = (mouseX-selectRect.left)/(selectRect.width/7) 
             select = int(math.floor(select))
             newGate = makeGate(gateNames[select])
+            clickOffset = newGate[1].width/2,newGate[1].height/2
             loadedGates.append(newGate)
             draggingObject = newGate
         #Spawn lines between components
@@ -300,7 +305,8 @@ while True:
     if draggingObject or drawingLine:
         UpdateLines()
     for line in loadedLines:
-        pygame.draw.line(screen, red, line[0][2], line[1][2], 2)
+        color = red if line[3] else lightRed
+        pygame.draw.line(screen, color, line[0][2], line[1][2], 2)
     #draw text
     font=pygame.font.Font(None,30)
     info1 = font.render("MousePos: "+str(mouseX) + ", "+str(mouseY), False, black)

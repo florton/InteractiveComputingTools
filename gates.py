@@ -23,14 +23,28 @@ def ListToArgs(list):
     args = (first,second) + tuple(list)
     return(args)
 
+linesList = []  
+  
+def UpdateLine(component,state):
+    print component
+    for line in linesList:
+        print line
+        print component
+        if str(component[0]) is str(line[0]) and component[1] is line[1]:
+            line[3] = state
     
-def EvaluateLight(light):
-    return BuildTree(light)
+    
+def EvaluateLight(light, lines):
+    linesList = lines
+    print light
+    return BuildTree(light),linesList
     
 def BuildTree(component):
-    #print component
     name = component[2]
-    connections = component[3]
+    if name == "LINE":
+        connections = [component[0][1]]
+    else:
+        connections = component[3]
     paths = []
     
     for path in connections:
@@ -39,26 +53,28 @@ def BuildTree(component):
         
     if not paths:
         paths = [False]  
-        
-    if name == 'SWITCH':
-        return name
-    elif paths:
-        if name == 'LIGHT':
-            return Or(*paths)
-        elif name == 'NOT':
-            return Nor(*paths)
-        elif name == 'AND':
-            return And(*paths)
-        elif name == 'OR':
-            return Or(*paths)
-        elif name == 'NOR':
-            return Nor(*paths)
-        elif name == 'NAND':
-            return Nand(*paths)
-        elif name == 'XOR':
-            return Xor(*paths)
-        elif name == 'XNOR':
-            return Xnor(*paths)
+    if name == 'LINE':
+        state = Or(*paths)
+        UpdateLine(component,state)
+        return state
+    elif name == 'SWITCH':
+        return component[4]
+    elif name == 'LIGHT':
+        return Or(*paths)
+    elif name == 'NOT':
+        return Nor(*paths)
+    elif name == 'AND':
+        return And(*paths)
+    elif name == 'OR':
+        return Or(*paths)
+    elif name == 'NOR':
+        return Nor(*paths)
+    elif name == 'NAND':
+        return Nand(*paths)
+    elif name == 'XOR':
+        return Xor(*paths)
+    elif name == 'XNOR':
+        return Xnor(*paths)
         
         
         
