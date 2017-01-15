@@ -16,27 +16,8 @@ def Xor(first, second=False, *args):
     
 def Xnor(first, second=False, *args):
     return not Xor(first, second, *args)
-    
-linesList = []  
-
-#Not currently used
-def UpdateLine(id, state):
-    global linesList
-    for line in linesList:
-        if line[3] == id:
-            line[4] = state
-            return
-
-#Not currently Used            
-def EvaluateLights(lights, lines):
-    global linesList
-    linesList = lines[:]
-    lightsList = []
-    for i, light in enumerate(lights):
-        lightsList.append(BuildTree(light))
-    return lightsList,linesList    
-    
-def BuildTree(component):
+        
+def Evaluate(component):
     name = component[2]
     if name == "LINE":
         connections = [component[0][1]]
@@ -45,7 +26,7 @@ def BuildTree(component):
     paths = []
     
     for path in connections:
-        result = BuildTree(path)
+        result = Evaluate(path)
         paths.append(result)   
         
     if not paths:
