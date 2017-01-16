@@ -22,26 +22,25 @@ def CheckLoop(pathList,id):
         return True
     return False
         
-def Evaluate(component):
+def Evaluate(component,loadedLines):
     pathList = []
-    return BuildTree(component,pathList)
+    return BuildTree(component,pathList,loadedLines)
 
-def BuildTree(component,pathList):
+def BuildTree(component,pathList,loadedLines):
     name = component[2]
     if name == "LINE":
         connections = [component[0][1]]
         pathList.append(component[3])
         if CheckLoop(pathList, component[3]):
-            return False
+            currentVal = next((line for line in loadedLines if line[3] == component[3]), None)[4]
+            return currentVal
     else:
         connections = component[3]
     paths = []
 
     for path in connections:
-        result = BuildTree(path,pathList)
-        paths.append(result) 
-    print name        
-    print paths        
+        result = BuildTree(path,pathList,loadedLines)
+        paths.append(result)        
     if not paths:
         paths = [False]  
     if name == 'LINE':

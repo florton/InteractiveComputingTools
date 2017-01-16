@@ -90,7 +90,6 @@ def Delete(object):
             loadedSwitches.remove(object)
         except:
             loadedLights.remove(object)
-
     
 def Distance(a,b):
     return math.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
@@ -161,16 +160,15 @@ def PositionLines():
         line[0][2] = newCoords[0]
         line[1][2] = newCoords[1]
 
-
 def UpdateLights():
     #Run Logic Simulation (turn lights on/off)
     for light in loadedLights:
-        turnLight(light, Evaluate(light))
-
+        turnLight(light, Evaluate(light,loadedLines))
 
 def UpdateLines():
+    #Run Logic Simulation (turn lines on/off)
     for line in loadedLines:
-        line[4] = Evaluate(line)
+        line[4] = Evaluate(line,loadedLines)
         
 ##Main()
         
