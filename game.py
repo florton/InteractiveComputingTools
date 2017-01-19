@@ -1,4 +1,5 @@
 import sys, pygame, math
+from pygame.locals import *
 from gates import Evaluate
 
 # A gate is a list [image, rect, gate_name_string, [connections_on_input_anchors], on/off] 
@@ -176,7 +177,7 @@ def UpdateLines():
 pygame.init()
 
 size = width, height = 800, 600
-screen = pygame.display.set_mode(size)
+screen=pygame.display.set_mode(size,HWSURFACE|DOUBLEBUF|RESIZABLE)
 
 white = 255, 255, 255
 black = 0,0,0
@@ -204,25 +205,32 @@ lightOn = pygame.image.load("gatePics\LIGHTON.png")
 
 gateSelect = pygame.image.load("gatePics\GATES.png")
 selectRect = gateSelect.get_rect()
-selectRect.midtop = (width/2,0)
 
 lineButton = pygame.image.load("gatePics\LINE.png")
 lineButtonRect = lineButton.get_rect()
-lineButtonRect.midleft = (0, height/4)
 
 switchButton = pygame.image.load("gatePics\SWITCH.png")
 switchButtonRect = switchButton.get_rect()
-switchButtonRect.midleft = (0, 3*(height/8))
 
 lightButton = pygame.image.load("gatePics\LIGHTBUTTON.png")
 lightButtonRect = lightButton.get_rect()
-lightButtonRect.midleft = (0, height/2)
+
 
 #Main Loop
 while True:
+    width,height = size
+    selectRect.midtop = (width/2,0)
+    lineButtonRect.midleft = (0, height/2 -75)
+    switchButtonRect.midleft = (0, height/2 +75)
+    lightButtonRect.midleft = (0, height/2)
+    
     #Get Input Events
     for event in pygame.event.get():
-        if event.type == pygame.QUIT: sys.exit()
+        if event.type == pygame.QUIT: 
+            sys.exit()
+        if event.type == pygame.VIDEORESIZE:
+            size = event.size
+            screen=pygame.display.set_mode(event.dict['size'],HWSURFACE|DOUBLEBUF|RESIZABLE)
         if event.type == pygame.MOUSEBUTTONDOWN:
             tempbuttons = [0,0,0]
             if(event.button <4):
@@ -319,12 +327,16 @@ while True:
     for line in loadedLines:
         color = red if line[4] else lightRed
         pygame.draw.line(screen, color, line[0][2], line[1][2], 2)
+    
     #draw text
-    font=pygame.font.Font(None,30)
-    info1 = font.render("MousePos: "+str(mouseX) + ", "+str(mouseY), False, black)
-    info3 = font.render("MouseKey:" + str(mouseKey), False, black)
-    screen.blit(info1, (0, height-40))
-    screen.blit(info3, (0, height-20))
+    #font=pygame.font.Font(None,30)
+    #info1 = font.render("MousePos: "+str(mouseX) + ", "+str(mouseY), False, black)
+    #info2 = font.render(str(size)+', ' +  str(width) + ', ' + str(height), False, black)
+    #info3 = font.render("MouseKey:" + str(mouseKey), False, black)
+    #screen.blit(info1, (0, height-40))
+    #screen.blit(info2, (0, height-40))
+    #screen.blit(info3, (0, height-20))
+    
     #Update Screen
     pygame.display.flip()
     
