@@ -18,15 +18,15 @@ def Xnor(first, second=False, *args):
     return not Xor(first, second, *args)
         
 def CheckLoop(pathList,id):
-    if pathList.count(id) > 1:
-        return True
-    return False
+    return pathList.count(id) > 1
         
 def Evaluate(component,loadedLines):
     pathList = []
     return BuildTree(component,pathList,loadedLines)
 
 def BuildTree(component,pathList,loadedLines):
+    if not component:
+        return False
     name = component[2]
     if name == "LINE":
         connections = [component[0][1]]
@@ -63,6 +63,8 @@ def BuildTree(component,pathList,loadedLines):
         return Xor(*paths)
     elif name == 'XNOR':
         return Xnor(*paths)
+    elif name == 'CLOCK':
+        return component[4]
         
         
         

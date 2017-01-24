@@ -1,6 +1,7 @@
 import sys, pygame, math
 from pygame.locals import *
 from gates import Evaluate
+from datetime import datetime
 
 # A gate is a list [image, rect, gate_name_string, [connections_on_input_anchors], on/off] 
 def makeGate(name):
@@ -22,9 +23,16 @@ def makeLight():
     lightRect = light.get_rect()
     lightRect.center = mouseX,mouseY 
     return([light,lightRect,"LIGHT",[],False])    
+
+# A clock is a list [image, rect, "CLOCK", [dummy_array], on/off, freq]    
+def makeClock():
+    clockRect = clockComponent.get_rect()
+    clockRect.center = mouseX,mouseY
+    freq = .5
+    return([clockComponent, clockRect, "CLOCK", [], False, freq])
     
 #A line is a matrix list [[start_target_anchor, start_target , start_coords],
-#[end_target_anchor, end_target, end_coords],"LINE",id(subject to change),on/off]    
+#[end_target_anchor, end_target, end_coords],"LINE",id,on/off]    
 def makeLine(mouseX,mouseY,target,drawingLine):
     mouseRelativeX = mouseX-target[1].left
     mouseRelativeY = mouseY-target[1].top
@@ -38,6 +46,9 @@ def makeLine(mouseX,mouseY,target,drawingLine):
     #else check if light
     elif target[2] == 'LIGHT':
         anchor = 5
+    #else check if clock
+    elif target[2] == 'CLOCK':
+        anchor = 6
     #otherwise its a gate    
     elif mouseRelativeX > 2*(target[1].width/3):
         #all gates' output
@@ -55,7 +66,7 @@ def makeLine(mouseX,mouseY,target,drawingLine):
         return drawingLine
     if drawingLine == 1:
         id = 0 if not loadedLines else loadedLines[-1][3]+1
-        if anchor == 1 or anchor == 4:
+        if anchor in [1,4,6]:
             #make new line with start target info
             loadedLines.append([[anchor,target,(mouseX,mouseY)],[None,None,None],"LINE",id,False])
         else:
@@ -64,9 +75,9 @@ def makeLine(mouseX,mouseY,target,drawingLine):
             #add current line to end target connections array
             target[3].append(loadedLines[-1])
     #inputs must connect to outputs and vis versa
-    elif ((anchor in [5,0,2,3] and loadedLines[-1][0][0] in [1,4]) or  (anchor in [1,4] and loadedLines[-1][0][0] in [5,0,2,3])
-    or (anchor in [5,0,2,3] and loadedLines[-1][1][0] in [1,4]) or  (anchor in [1,4] and loadedLines[-1][1][0] in [5,0,2,3])):
-        if anchor == 1 or anchor == 4:
+    elif ((anchor in [5,0,2,3] and loadedLines[-1][0][0] in [1,4,6]) or  (anchor in [1,4,6] and loadedLines[-1][0][0] in [5,0,2,3])
+    or (anchor in [5,0,2,3] and loadedLines[-1][1][0] in [1,4,6]) or  (anchor in [1,4,6] and loadedLines[-1][1][0] in [5,0,2,3])):
+        if anchor in [1,4,6]:
             #add end target info to current (last) line
             loadedLines[-1][0] = [anchor,target,(mouseX,mouseY)]
         else:
@@ -90,7 +101,10 @@ def Delete(object):
         try:
             loadedSwitches.remove(object)
         except:
-            loadedLights.remove(object)
+            try:
+                loadedLights.remove(object)
+            except:
+                loadedClocks.remove(object)
     
 def Distance(a,b):
     return math.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
@@ -152,8 +166,8 @@ def PositionLines():
             #if gate input top
             elif line[x][0] == 3:
                 newCoords[x] = target[1].left+offset , target[1].topleft[1] + target[1].height/4
-            #if switch
-            elif line[x][0] == 4:
+            #if switch or clock
+            elif line[x][0] == 4 or line[x][0] == 6:
                 newCoords[x] = target[1].midright
             #if light
             elif line[x][0] == 5:
@@ -171,6 +185,17 @@ def UpdateLines():
     for line in loadedLines:
         line[4] = Evaluate(line,loadedLines)
         
+def UpdateClocks(timestamp):
+    newTime = datetime.utcnow()    
+    for clock in loadedClocks:
+        deltaTime = (newTime-timestamp).total_seconds()
+        if deltaTime >= clock[5]:
+            clock[4] = not clock[4]
+            timestamp = newTime            
+        screen.blit(clock[0],clock[1])
+    return timestamp    
+       
+        
 ##Main()
         
 #Initialize variables 
@@ -187,7 +212,9 @@ lightRed = 255, 180, 180
 clickCoords = 0,0
 clickOffset = 0,0
 mouseX,mouseY = 0,0
-mouseKey = 0;
+mouseKey = 0
+
+timestamp = datetime.utcnow()
 
 gateNames = ['AND','OR','NOT','NOR','NAND','XOR','XNOR']
 draggingObject = None
@@ -197,11 +224,13 @@ loadedGates = []
 loadedLines = []
 loadedSwitches = []
 loadedLights = []
+loadedClocks = []
 
-switchOn = pygame.image.load("gatePics\ON.png")
-switchOff = pygame.image.load("gatePics\OFF.png")
+switchOn = pygame.image.load("gatePics\SWITCHON.png")
+switchOff = pygame.image.load("gatePics\SWITCHOFF.png")
 lightOff = pygame.image.load("gatePics\LIGHTOFF.png")
 lightOn = pygame.image.load("gatePics\LIGHTON.png")
+clockComponent = pygame.image.load("gatePics\CLOCK.png")
 
 gateSelect = pygame.image.load("gatePics\GATES.png")
 selectRect = gateSelect.get_rect()
@@ -209,12 +238,14 @@ selectRect = gateSelect.get_rect()
 lineButton = pygame.image.load("gatePics\LINE.png")
 lineButtonRect = lineButton.get_rect()
 
-switchButton = pygame.image.load("gatePics\SWITCH.png")
+switchButton = pygame.image.load("gatePics\SWITCHBUTTON.png")
 switchButtonRect = switchButton.get_rect()
 
 lightButton = pygame.image.load("gatePics\LIGHTBUTTON.png")
 lightButtonRect = lightButton.get_rect()
 
+clockButton = pygame.image.load("gatePics\CLOCKBUTTON.png")
+clockButtonRect = clockButton.get_rect()
 
 #Main Loop
 while True:
@@ -223,6 +254,7 @@ while True:
     lineButtonRect.midleft = (0, height/2 -75)
     switchButtonRect.midleft = (0, height/2 +75)
     lightButtonRect.midleft = (0, height/2)
+    clockButtonRect.midleft = (0, height/2 +150)
     
     #Get Input Events
     for event in pygame.event.get():
@@ -254,7 +286,7 @@ while True:
     if draggingObject and not drawingLine:
         draggingObject[1].topleft = mouseX - clickOffset[0] , mouseY - clickOffset[1] 
     elif mouseKey[0] == 1:
-        for target in loadedGates+loadedSwitches+loadedLights:
+        for target in loadedGates+loadedSwitches+loadedLights+loadedClocks:
             if target[1].collidepoint(mouseX,mouseY):
                 #maybe draw a line instead
                 if drawingLine and drawingLine!=3:
@@ -281,7 +313,7 @@ while True:
             if IsBetween(line[0][2],line[1][2],(mouseX,mouseY)):
                 DeleteLine(line)
         #Delete gate, light, or switch
-        for object in loadedGates+loadedLights+loadedSwitches:
+        for object in loadedGates+loadedLights+loadedSwitches+loadedClocks:
             if object[1].collidepoint(mouseX,mouseY):
                 Delete(object)
     
@@ -304,16 +336,21 @@ while True:
         #Spawn lights
         if lightButtonRect.collidepoint(mouseX,mouseY):
             loadedLights.append(makeLight())
-            
+        #Spawn Clock
+        if clockButtonRect.collidepoint(mouseX,mouseY):
+            loadedClocks.append(makeClock())
+    
+    
     #Start Drawing
     screen.fill(white) 
     #draw selection bar & buttons
     screen.blit(gateSelect,selectRect)   
     screen.blit(lineButton,lineButtonRect)  
     screen.blit(switchButton,switchButtonRect)     
-    screen.blit(lightButton,lightButtonRect)     
+    screen.blit(lightButton,lightButtonRect)
+    screen.blit(clockButton,clockButtonRect)
     #draw all gates, switches & Lines
-    for target in loadedGates+loadedSwitches+loadedLights:
+    for target in loadedGates+loadedSwitches+loadedLights+loadedClocks:
         screen.blit(target[0], target[1])  
     #draw all switches
     for switch in loadedSwitches:
@@ -327,6 +364,11 @@ while True:
     for line in loadedLines:
         color = red if line[4] else lightRed
         pygame.draw.line(screen, color, line[0][2], line[1][2], 2)
+    #update clocks
+    if loadedClocks:
+        timestamp = UpdateClocks(timestamp)
+        UpdateLights()
+        UpdateLines()
     
     #draw text
     #font=pygame.font.Font(None,30)
