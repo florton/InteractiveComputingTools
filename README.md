@@ -7,10 +7,10 @@
 ###The app should be intuitive and simple to use for new and experienced users
 
 ##Installing and running
-Currently there is no built version of the application. Once the Beta version is complete there will be build for PC,Mac&Linux
+Currently there is no built version of the application. Once the Beta version is complete there will be a build for PC,Mac&Linux
 
 ###Steps for installation:
-1. Install Python 2.7
+1. Install Python 2.7 https://www.python.org/downloads/release/python-2713/
 2. Install Pygame http://www.pygame.org/download.shtml
 3. Download InteractiveLogicAlpha1_0.zip
 4. Unzip and run InteractiveLogic/InteractiveLogic.py
@@ -28,7 +28,7 @@ Currently there is no built version of the application. Once the Beta version is
 
 ##Features To Be Added
 - Truth Table Generator
-- Timeing Diagram Generator
+- Timing Diagram Generator
 - Save/Load Circuit
 - Export as Image
 - Custom Re-Usable Components
