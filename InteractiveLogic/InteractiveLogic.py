@@ -1,9 +1,9 @@
 import sys, pygame, math
 from pygame.locals import *
 from gates import Evaluate
-from generator import GenerateTruthTable
+from generator import GenerateTruthTable, TruthWindow
 from datetime import datetime
-from multiprocessing import Process
+
 
 # A gate is a list [image, rect, gate_name_string, [connections_on_input_anchors], on/off] 
 def makeGate(name):
@@ -40,6 +40,9 @@ def makeLine(mouseX,mouseY,target,drawingLine):
     mouseRelativeX = mouseX-target[1].left
     mouseRelativeY = mouseY-target[1].top
     anchor = None
+    inputAnchors = [5,0,2,3]
+    outputAnchors = [1,4,6]
+
     # if drawingLine == 1 -> set line start, if == 2 -> set line end,
     # if == 3 -> set drawingLine to 1 on next mouseup
     
@@ -154,6 +157,7 @@ def Click(clickCoords):
         if truthTableButtonRect.collidepoint(mouseX,mouseY):
             GenerateTruthTable(loadedLights,loadedSwitches,loadedLines)
 
+
             
 def PositionLines():
     for line in loadedLines:
@@ -202,199 +206,212 @@ def UpdateClocks(timestamp):
         screen.blit(clock[0],clock[1])
     return timestamp    
        
-##Main()
+def Main():
         
-#Initialize variables 
-pygame.init()
-
-size = width, height = 800, 600
-screen=pygame.display.set_mode(size,HWSURFACE|DOUBLEBUF|RESIZABLE)
-
-white = 255, 255, 255
-black = 0,0,0
-red = 255,0,0
-lightRed = 255, 180, 180
-
-clickCoords = 0,0
-clickOffset = 0,0
-mouseX,mouseY = 0,0
-mouseKey = 0
-
-loadedGates = []
-loadedLines = []
-loadedSwitches = []
-loadedLights = []
-loadedClocks = []
-
-inputAnchors = [5,0,2,3]
-outputAnchors = [1,4,6]
-
-timestamp = datetime.utcnow()
-
-gateNames = ['AND','OR','NOT','NOR','NAND','XOR','XNOR']
-draggingObject = None
-drawingLine = False
-
-switchOn = pygame.image.load("gatePics\SWITCHON.png")
-switchOff = pygame.image.load("gatePics\SWITCHOFF.png")
-lightOff = pygame.image.load("gatePics\LIGHTOFF.png")
-lightOn = pygame.image.load("gatePics\LIGHTON.png")
-clockComponent = pygame.image.load("gatePics\CLOCK.png")
-
-gateSelect = pygame.image.load("gatePics\GATES.png")
-selectRect = gateSelect.get_rect()
-
-lineButton = pygame.image.load("gatePics\LINE.png")
-lineButtonRect = lineButton.get_rect()
-
-switchButton = pygame.image.load("gatePics\SWITCHBUTTON.png")
-switchButtonRect = switchButton.get_rect()
-
-lightButton = pygame.image.load("gatePics\LIGHTBUTTON.png")
-lightButtonRect = lightButton.get_rect()
-
-clockButton = pygame.image.load("gatePics\CLOCKBUTTON.png")
-clockButtonRect = clockButton.get_rect()
-
-truthTableButton = pygame.image.load("gatePics\TRUTHTABLEBUTTON.png")
-truthTableButtonRect = truthTableButton.get_rect()
-
-#Main Loop
-while True:
-    width,height = size
-    selectRect.midtop = (width/2,0)
-    lineButtonRect.midleft = (0, height/2 -75)
-    switchButtonRect.midleft = (0, height/2 +75)
-    lightButtonRect.midleft = (0, height/2)
-    clockButtonRect.midleft = (0, height/2 +150)
-    truthTableButtonRect.midleft = (0, height/2 +225)
+    #Initialize variables 
+    pygame.init()
     
-    #Get Input Events
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT: 
-            sys.exit()
-        if event.type == pygame.VIDEORESIZE:
-            size = event.size
-            screen=pygame.display.set_mode(event.dict['size'],HWSURFACE|DOUBLEBUF|RESIZABLE)
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            tempbuttons = [0,0,0]
-            if(event.button <4):
-                tempbuttons[event.button-1] = 1
-                mouseKey = tuple(tempbuttons)
-                clickCoords = event.pos
-        if event.type == pygame.MOUSEBUTTONUP:
-            if drawingLine == 3:
+    global size, width, height, screen
+    
+    size = width, height = 800, 600
+    screen=pygame.display.set_mode(size,HWSURFACE|DOUBLEBUF|RESIZABLE)
+
+    white = 255, 255, 255
+    black = 0,0,0
+    red = 255,0,0
+    lightRed = 255, 180, 180
+    
+    global clickCoords,clickOffset,mouseX,mouseY, mouseKey
+
+    clickCoords = 0,0
+    clickOffset = 0,0
+    mouseX,mouseY = 0,0
+    mouseKey = 0
+    
+    global loadedGates,loadedLights,loadedLines,loadedSwitches,loadedClocks
+
+    loadedGates = []
+    loadedLines = []
+    loadedSwitches = []
+    loadedLights = []
+    loadedClocks = []    
+    
+    timestamp = datetime.utcnow()
+    
+    global gatenames, draggingObject, drawingLine
+
+    gateNames = ['AND','OR','NOT','NOR','NAND','XOR','XNOR']
+    draggingObject = None
+    drawingLine = False
+    
+    global switchOn,switchOff, lightOn, lightOff, clockComponent
+
+    switchOn = pygame.image.load("gatePics\SWITCHON.png")
+    switchOff = pygame.image.load("gatePics\SWITCHOFF.png")
+    lightOff = pygame.image.load("gatePics\LIGHTOFF.png")
+    lightOn = pygame.image.load("gatePics\LIGHTON.png")
+    clockComponent = pygame.image.load("gatePics\CLOCK.png")
+    
+    global gateSelect, selectRect , lineButton , lineButtonRect
+    global switchButton, switchButtonRect , lightButton, lightButtonRect
+    global clockButton, clockButtonRect, truthTableButton, truthTableButtonRect
+
+    gateSelect = pygame.image.load("gatePics\GATES.png")
+    selectRect = gateSelect.get_rect()
+
+    lineButton = pygame.image.load("gatePics\LINE.png")
+    lineButtonRect = lineButton.get_rect()
+
+    switchButton = pygame.image.load("gatePics\SWITCHBUTTON.png")
+    switchButtonRect = switchButton.get_rect()
+
+    lightButton = pygame.image.load("gatePics\LIGHTBUTTON.png")
+    lightButtonRect = lightButton.get_rect()
+
+    clockButton = pygame.image.load("gatePics\CLOCKBUTTON.png")
+    clockButtonRect = clockButton.get_rect()
+
+    truthTableButton = pygame.image.load("gatePics\TRUTHTABLEBUTTON.png")
+    truthTableButtonRect = truthTableButton.get_rect()
+
+    #Main Loop
+    while True:
+        width,height = size
+        selectRect.midtop = (width/2,0)
+        lineButtonRect.midleft = (0, height/2 -75)
+        switchButtonRect.midleft = (0, height/2 +75)
+        lightButtonRect.midleft = (0, height/2)
+        clockButtonRect.midleft = (0, height/2 +150)
+        truthTableButtonRect.midleft = (0, height/2 +225)
+        
+        #Get Input Events
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT: 
+                sys.exit()
+            if event.type == pygame.VIDEORESIZE:
+                size = event.size
+                screen=pygame.display.set_mode(event.dict['size'],HWSURFACE|DOUBLEBUF|RESIZABLE)
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                tempbuttons = [0,0,0]
+                if(event.button <4):
+                    tempbuttons[event.button-1] = 1
+                    mouseKey = tuple(tempbuttons)
+                    clickCoords = event.pos
+            if event.type == pygame.MOUSEBUTTONUP:
+                if drawingLine == 3:
+                    drawingLine = 1
+                tempbuttons = [0,0,0]
+                if(event.button <4):
+                    tempbuttons[event.button-1] = 0
+                    mouseKey = tuple(tempbuttons)
+                if(Distance(clickCoords, event.pos)<10):  
+                    Click(clickCoords)
+            if event.type == pygame.MOUSEMOTION: 
+                mouseX,mouseY = event.pos
+                mouseKey = event.buttons
+                
+        #Move gate/switch if cursor clicks&drags     
+        if draggingObject and not drawingLine:
+            draggingObject[1].topleft = mouseX - clickOffset[0] , mouseY - clickOffset[1] 
+        elif mouseKey[0] == 1:
+            for target in loadedGates+loadedSwitches+loadedLights+loadedClocks:
+                if target[1].collidepoint(mouseX,mouseY):
+                    #maybe draw a line instead
+                    if drawingLine and drawingLine!=3:
+                        drawingLine = makeLine(mouseX,mouseY,target,drawingLine)                   
+                    else:
+                        clickOffset = mouseX-target[1].left , mouseY-target[1].top
+                        draggingObject = target
+        if mouseKey[0] == 0 and draggingObject:
+            if draggingObject and selectRect.collidepoint(draggingObject[1].center):
+                Delete(draggingObject)
+            draggingObject = None
+        
+        #Right Click
+        if mouseKey[2] == 1:
+            #Delete any partially drawn line and stop drawing new lines
+            if drawingLine == 1 or drawingLine == 2:
+                if loadedLines and not loadedLines[-1][1]:
+                    loadedLines.pop()
+                pygame.mouse.set_cursor(*pygame.cursors.arrow)
+                drawingLine = False
+                continue
+            #Delete existing line
+            for line in loadedLines:
+                if IsBetween(line[0][2],line[1][2],(mouseX,mouseY)):
+                    DeleteLine(line)
+            #Delete gate, light, or switch
+            for object in loadedGates+loadedLights+loadedSwitches+loadedClocks:
+                if object[1].collidepoint(mouseX,mouseY):
+                    Delete(object)
+        
+        if mouseKey[0] == 1 and not draggingObject and not drawingLine:
+            #Spawn new gates
+            if selectRect.collidepoint(mouseX,mouseY):
+                select = (mouseX-selectRect.left)/(selectRect.width/7) 
+                select = int(math.floor(select))
+                newGate = makeGate(gateNames[select])
+                clickOffset = newGate[1].width/2,newGate[1].height/2
+                loadedGates.append(newGate)
+                draggingObject = newGate
+            #Spawn lines between components
+            if lineButtonRect.collidepoint(mouseX,mouseY):
                 drawingLine = 1
-            tempbuttons = [0,0,0]
-            if(event.button <4):
-                tempbuttons[event.button-1] = 0
-                mouseKey = tuple(tempbuttons)
-            if(Distance(clickCoords, event.pos)<10):  
-                Click(clickCoords)
-        if event.type == pygame.MOUSEMOTION: 
-            mouseX,mouseY = event.pos
-            mouseKey = event.buttons
-            
-    #Move gate/switch if cursor clicks&drags     
-    if draggingObject and not drawingLine:
-        draggingObject[1].topleft = mouseX - clickOffset[0] , mouseY - clickOffset[1] 
-    elif mouseKey[0] == 1:
+                pygame.mouse.set_cursor(*pygame.cursors.diamond)
+            #Spawn switches
+            if switchButtonRect.collidepoint(mouseX,mouseY):
+                loadedSwitches.append(makeSwitch())
+            #Spawn lights
+            if lightButtonRect.collidepoint(mouseX,mouseY):
+                loadedLights.append(makeLight())
+            #Spawn Clock
+            if clockButtonRect.collidepoint(mouseX,mouseY):
+                loadedClocks.append(makeClock())  
+        
+        #Start Drawing
+        screen.fill(white) 
+        #draw selection bar & buttons
+        screen.blit(gateSelect,selectRect)   
+        screen.blit(lineButton,lineButtonRect)  
+        screen.blit(switchButton,switchButtonRect)     
+        screen.blit(lightButton,lightButtonRect)
+        screen.blit(clockButton,clockButtonRect)
+        screen.blit(truthTableButton,truthTableButtonRect)
+        #draw all gates, switches & Lines
         for target in loadedGates+loadedSwitches+loadedLights+loadedClocks:
-            if target[1].collidepoint(mouseX,mouseY):
-                #maybe draw a line instead
-                if drawingLine and drawingLine!=3:
-                    drawingLine = makeLine(mouseX,mouseY,target,drawingLine)                   
-                else:
-                    clickOffset = mouseX-target[1].left , mouseY-target[1].top
-                    draggingObject = target
-    if mouseKey[0] == 0 and draggingObject:
-        if draggingObject and selectRect.collidepoint(draggingObject[1].center):
-            Delete(draggingObject)
-        draggingObject = None
-    
-    #Right Click
-    if mouseKey[2] == 1:
-        #Delete any partially drawn line and stop drawing new lines
-        if drawingLine == 1 or drawingLine == 2:
-            if loadedLines and not loadedLines[-1][1]:
-                loadedLines.pop()
-            pygame.mouse.set_cursor(*pygame.cursors.arrow)
-            drawingLine = False
-            continue
-        #Delete existing line
+            screen.blit(target[0], target[1])  
+        #draw all switches
+        for switch in loadedSwitches:
+            screen.blit(switch[0],switch[1])
+        #draw all lights
+        for light in loadedLights:
+            screen.blit(light[0],light[1])
+        #draw and update all lines
+        if draggingObject or drawingLine:
+            PositionLines()
         for line in loadedLines:
-            if IsBetween(line[0][2],line[1][2],(mouseX,mouseY)):
-                DeleteLine(line)
-        #Delete gate, light, or switch
-        for object in loadedGates+loadedLights+loadedSwitches+loadedClocks:
-            if object[1].collidepoint(mouseX,mouseY):
-                Delete(object)
-    
-    if mouseKey[0] == 1 and not draggingObject and not drawingLine:
-        #Spawn new gates
-        if selectRect.collidepoint(mouseX,mouseY):
-            select = (mouseX-selectRect.left)/(selectRect.width/7) 
-            select = int(math.floor(select))
-            newGate = makeGate(gateNames[select])
-            clickOffset = newGate[1].width/2,newGate[1].height/2
-            loadedGates.append(newGate)
-            draggingObject = newGate
-        #Spawn lines between components
-        if lineButtonRect.collidepoint(mouseX,mouseY):
-            drawingLine = 1
-            pygame.mouse.set_cursor(*pygame.cursors.diamond)
-        #Spawn switches
-        if switchButtonRect.collidepoint(mouseX,mouseY):
-            loadedSwitches.append(makeSwitch())
-        #Spawn lights
-        if lightButtonRect.collidepoint(mouseX,mouseY):
-            loadedLights.append(makeLight())
-        #Spawn Clock
-        if clockButtonRect.collidepoint(mouseX,mouseY):
-            loadedClocks.append(makeClock())  
-    
-    #Start Drawing
-    screen.fill(white) 
-    #draw selection bar & buttons
-    screen.blit(gateSelect,selectRect)   
-    screen.blit(lineButton,lineButtonRect)  
-    screen.blit(switchButton,switchButtonRect)     
-    screen.blit(lightButton,lightButtonRect)
-    screen.blit(clockButton,clockButtonRect)
-    screen.blit(truthTableButton,truthTableButtonRect)
-    #draw all gates, switches & Lines
-    for target in loadedGates+loadedSwitches+loadedLights+loadedClocks:
-        screen.blit(target[0], target[1])  
-    #draw all switches
-    for switch in loadedSwitches:
-        screen.blit(switch[0],switch[1])
-    #draw all lights
-    for light in loadedLights:
-        screen.blit(light[0],light[1])
-    #draw and update all lines
-    if draggingObject or drawingLine:
-        PositionLines()
-    for line in loadedLines:
-        color = red if line[4] else lightRed
-        pygame.draw.line(screen, color, line[0][2], line[1][2], 2)
-    #update clocks
-    if loadedClocks:
-        timestamp = UpdateClocks(timestamp)
-        UpdateLights()
-        UpdateLines()
-    
-    #draw text
-    #font=pygame.font.Font(None,30)
-    #info1 = font.render("MousePos: "+str(mouseX) + ", "+str(mouseY), False, black)
-    #info2 = font.render(str(size)+', ' +  str(width) + ', ' + str(height), False, black)
-    #info3 = font.render("MouseKey:" + str(mouseKey), False, black)
-    #screen.blit(info1, (0, height-40))
-    #screen.blit(info2, (0, height-40))
-    #screen.blit(info3, (0, height-20))
-    
-    #Update Screen
-    pygame.display.flip()
-
+            color = red if line[4] else lightRed
+            pygame.draw.line(screen, color, line[0][2], line[1][2], 2)
+        #update clocks
+        if loadedClocks:
+            timestamp = UpdateClocks(timestamp)
+            UpdateLights()
+            UpdateLines()
+        
+        #draw text
+        #font=pygame.font.Font(None,30)
+        #info1 = font.render("MousePos: "+str(mouseX) + ", "+str(mouseY), False, black)
+        #info2 = font.render(str(size)+', ' +  str(width) + ', ' + str(height), False, black)
+        #info3 = font.render("MouseKey:" + str(mouseKey), False, black)
+        #screen.blit(info1, (0, height-40))
+        #screen.blit(info2, (0, height-40))
+        #screen.blit(info3, (0, height-20))
+        
+        #Update Screen
+        pygame.display.flip()
+        
+if __name__ == '__main__':
+    Main()
 
     
     

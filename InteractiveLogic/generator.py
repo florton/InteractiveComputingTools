@@ -1,5 +1,6 @@
 import sys, pygame, math
 import subprocess
+from multiprocessing import Process
 from pygame.locals import *
 from gates import Evaluate
 
@@ -7,15 +8,8 @@ def FlipSwitches(order,switches):
     for x in range(len(switches)):
         switches[x][4] = True if order[x] == '1' else False
     return switches   
-
    
-def TruthWindow(inputs, outputs): 
-    inputs = eval(inputs)
-    outputs = eval(outputs)
-    
-    #print inputs
-    #print outputs
-    
+def TruthWindow(inputs, outputs):   
     pygame.init()
     
     white = 255, 255, 255
@@ -50,11 +44,16 @@ def TruthWindow(inputs, outputs):
         
     
 def GenerateTruthTable(loadedLights,loadedSwitches,loadedLines):
+    #save current switch states
+    oldSwitches = []
+    for switch in loadedSwitches:
+        oldSwitches.append(switch[4])
+
     inputs = []
     outputs = []
-
     switchNum = len(loadedSwitches)  
-
+    
+    #try simulating all switch combinations
     for x in range(2**switchNum):
         outputs.append([])
         for light in loadedLights:
@@ -66,8 +65,13 @@ def GenerateTruthTable(loadedLights,loadedSwitches,loadedLines):
             
             outputs[x].append(Evaluate(light,loadedLines))
             
-    if outputs and inputs:
-        subprocess.Popen(['python', 'generator.py', str(inputs), str(outputs)])
+    #put switches back where they were        
+    for x in range(len(loadedSwitches)):
+        loadedSwitches[x][4] = oldSwitches[x]
+    
+    #open truth table window in a new process
+    newProcess = Process(target=TruthWindow, args=(inputs,outputs))
+    newProcess.start()
 
-if __name__ == '__main__':
-    TruthWindow(sys.argv[1],sys.argv[2])
+
+    
