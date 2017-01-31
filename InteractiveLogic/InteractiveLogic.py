@@ -1,7 +1,9 @@
 import sys, pygame, math
 from pygame.locals import *
 from gates import Evaluate
+from generator import GenerateTruthTable
 from datetime import datetime
+from multiprocessing import Process
 
 # A gate is a list [image, rect, gate_name_string, [connections_on_input_anchors], on/off] 
 def makeGate(name):
@@ -10,12 +12,13 @@ def makeGate(name):
     gateRect.center = mouseX,mouseY
     return([gate,gateRect,name,[],False])
 
-# A switch is a list [image, rect, "SWITCH" , [dummy_array],on/off] 
+# A switch is a list [image, rect, "SWITCH" , [dummy_array],on/off, id] 
 def makeSwitch():
     switch = switchOff
     switchRect = switch.get_rect()
     switchRect.center = mouseX,mouseY 
-    return([switch,switchRect,"SWITCH",[],False])
+    id = 0 if not loadedSwitches else loadedSwitches[-1][5]+1
+    return([switch,switchRect,"SWITCH",[],False,id])
 
 # A light is a list [image, rect, "LIGHT", [connections],on/off] 
 def makeLight():
@@ -66,7 +69,7 @@ def makeLine(mouseX,mouseY,target,drawingLine):
         return drawingLine
     if drawingLine == 1:
         id = 0 if not loadedLines else loadedLines[-1][3]+1
-        if anchor in [1,4,6]:
+        if anchor in outputAnchors:
             #make new line with start target info
             loadedLines.append([[anchor,target,(mouseX,mouseY)],[None,None,None],"LINE",id,False])
         else:
@@ -75,9 +78,9 @@ def makeLine(mouseX,mouseY,target,drawingLine):
             #add current line to end target connections array
             target[3].append(loadedLines[-1])
     #inputs must connect to outputs and vis versa
-    elif ((anchor in [5,0,2,3] and loadedLines[-1][0][0] in [1,4,6]) or  (anchor in [1,4,6] and loadedLines[-1][0][0] in [5,0,2,3])
-    or (anchor in [5,0,2,3] and loadedLines[-1][1][0] in [1,4,6]) or  (anchor in [1,4,6] and loadedLines[-1][1][0] in [5,0,2,3])):
-        if anchor in [1,4,6]:
+    elif ((anchor in inputAnchors and (loadedLines[-1][0][0] in outputAnchors or loadedLines[-1][1][0] in outputAnchors))
+        or (anchor in outputAnchors and (loadedLines[-1][0][0] in inputAnchors or loadedLines[-1][1][0] in inputAnchors))):       
+        if anchor in outputAnchors:
             #add end target info to current (last) line
             loadedLines[-1][0] = [anchor,target,(mouseX,mouseY)]
         else:
@@ -127,7 +130,7 @@ def DeleteLine(line):
     UpdateLights()
     UpdateLines()
 
-def turnLight(light, bool):
+def TurnLight(light, bool):
     if bool:
         light[0] = lightOn
         light[4] = True
@@ -147,6 +150,10 @@ def Click(clickCoords):
                     switch[4] = True
                 UpdateLights()
                 UpdateLines()
+        #Generate Truth Table
+        if truthTableButtonRect.collidepoint(mouseX,mouseY):
+            GenerateTruthTable(loadedLights,loadedSwitches,loadedLines)
+
             
 def PositionLines():
     for line in loadedLines:
@@ -178,7 +185,7 @@ def PositionLines():
 def UpdateLights():
     #Run Logic Simulation (turn lights on/off)
     for light in loadedLights:
-        turnLight(light, Evaluate(light,loadedLines))
+        TurnLight(light, Evaluate(light,loadedLines))
 
 def UpdateLines():
     #Run Logic Simulation (turn lines on/off)
@@ -195,7 +202,6 @@ def UpdateClocks(timestamp):
         screen.blit(clock[0],clock[1])
     return timestamp    
        
-        
 ##Main()
         
 #Initialize variables 
@@ -214,17 +220,20 @@ clickOffset = 0,0
 mouseX,mouseY = 0,0
 mouseKey = 0
 
-timestamp = datetime.utcnow()
-
-gateNames = ['AND','OR','NOT','NOR','NAND','XOR','XNOR']
-draggingObject = None
-drawingLine = False
-
 loadedGates = []
 loadedLines = []
 loadedSwitches = []
 loadedLights = []
 loadedClocks = []
+
+inputAnchors = [5,0,2,3]
+outputAnchors = [1,4,6]
+
+timestamp = datetime.utcnow()
+
+gateNames = ['AND','OR','NOT','NOR','NAND','XOR','XNOR']
+draggingObject = None
+drawingLine = False
 
 switchOn = pygame.image.load("gatePics\SWITCHON.png")
 switchOff = pygame.image.load("gatePics\SWITCHOFF.png")
@@ -247,6 +256,9 @@ lightButtonRect = lightButton.get_rect()
 clockButton = pygame.image.load("gatePics\CLOCKBUTTON.png")
 clockButtonRect = clockButton.get_rect()
 
+truthTableButton = pygame.image.load("gatePics\TRUTHTABLEBUTTON.png")
+truthTableButtonRect = truthTableButton.get_rect()
+
 #Main Loop
 while True:
     width,height = size
@@ -255,6 +267,7 @@ while True:
     switchButtonRect.midleft = (0, height/2 +75)
     lightButtonRect.midleft = (0, height/2)
     clockButtonRect.midleft = (0, height/2 +150)
+    truthTableButtonRect.midleft = (0, height/2 +225)
     
     #Get Input Events
     for event in pygame.event.get():
@@ -338,8 +351,7 @@ while True:
             loadedLights.append(makeLight())
         #Spawn Clock
         if clockButtonRect.collidepoint(mouseX,mouseY):
-            loadedClocks.append(makeClock())
-    
+            loadedClocks.append(makeClock())  
     
     #Start Drawing
     screen.fill(white) 
@@ -349,6 +361,7 @@ while True:
     screen.blit(switchButton,switchButtonRect)     
     screen.blit(lightButton,lightButtonRect)
     screen.blit(clockButton,clockButtonRect)
+    screen.blit(truthTableButton,truthTableButtonRect)
     #draw all gates, switches & Lines
     for target in loadedGates+loadedSwitches+loadedLights+loadedClocks:
         screen.blit(target[0], target[1])  
@@ -381,8 +394,7 @@ while True:
     
     #Update Screen
     pygame.display.flip()
-    
-    
+
 
     
     
