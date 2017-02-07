@@ -1,9 +1,9 @@
 import sys, pygame, math
 from pygame.locals import *
 from gates import Evaluate
-from generator import GenerateTruthTable, TruthTableError, LoadTimingWindow
+from generator import GenerateTruthTable, TruthTableError, GenerateTimingDiagram
 from datetime import datetime
-from multiprocessing import Process
+#from multiprocessing import Process
 
 
 # A gate is a list [image, rect, gate_name_string, [connections_on_input_anchors], on/off, id] 
@@ -173,9 +173,11 @@ def Click(clickCoords):
         if timingButtonRect.collidepoint(mouseX,mouseY):
             for process in childProcesses:
                 process.terminate()
-            newProcess = Process(target=LoadTimingWindow, args=())
-            newProcess.start()
-            childProcesses.append(newProcess)
+            result = GenerateTimingDiagram()
+            childProcesses.append(result[0])
+            global timingPipe
+            timingPipe = result[1]
+            timingPipe.send([loadedSwitches,loadedClocks,loadedLights])
         
 def PositionLines():
     for line in loadedLines:
@@ -213,6 +215,7 @@ def UpdateLines():
     #Run Logic Simulation (turn lines on/off)
     for line in loadedLines:
         line[4] = Evaluate(line,loadedLines)
+    timingPipe.send([loadedSwitches,loadedClocks,loadedLights])
         
 def UpdateClocks():
     newTime = datetime.utcnow()    
@@ -262,9 +265,10 @@ def Main():
     
     timestamp = datetime.utcnow()
     
-    global childProcesses
+    global childProcesses, timingPipe
     
     childProcesses = []
+    timingPipe = None
     
     global gatenames, draggingObject, drawingLine
 

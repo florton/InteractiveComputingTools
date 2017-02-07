@@ -1,6 +1,6 @@
 import sys, pygame, math
 import subprocess
-from multiprocessing import Process
+from multiprocessing import Process, Pipe
 from pygame.locals import *
 from gates import Evaluate
 
@@ -120,12 +120,21 @@ def GenerateTruthTable(loadedLights,loadedSwitches,loadedLines):
     newProcess = Process(target=LoadTruthWindow, args=(inputs,outputs,ids))
     newProcess.start()
     return newProcess
+    
+def GenerateTimingDiagram():
+    #open timing window in a new process
+    parentConnection, childConnection = Pipe()
+    newProcess = Process(target=LoadTimingWindow, args=(childConnection,))
+    newProcess.start()
+    return newProcess,parentConnection
 
-def LoadTimingWindow():
+def LoadTimingWindow(mainProgram):
     pygame.init()
-
+    pygame.display.set_caption("Timing Diagram")
     size = width, height = 400,300
     screen=pygame.display.set_mode(size)
+    
+    response = ""
     
     while True:
         screen.fill(white) 
@@ -133,6 +142,37 @@ def LoadTimingWindow():
         for event in pygame.event.get():
             if event.type == pygame.QUIT: 
                 sys.exit()
-    
+                
+        font=pygame.font.Font(None,30)
+        try:
+            response = mainProgram.recv()
+        except: 
+            pass
+            
+        inputs = [(switch[5],switch[4]) for switch in response[0]]
+        clocks = [(clock[5],clock[4]) for clock in response[1]]
+        outputs = [(light[5],light[4]) for light in response[2]]
+            
+        
+        text0 = font.render(str(inputs), True, black)
+        screen.blit(text0, (0, 0))      
+        text1 = font.render(str(clocks), True, black)
+        screen.blit(text1, (0, 30))      
+        text2 = font.render(str(outputs), True, black)
+        screen.blit(text2, (0, 60))
+            
         pygame.display.flip()
+        
         pygame.time.wait(100)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
