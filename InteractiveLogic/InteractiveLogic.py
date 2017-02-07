@@ -1,16 +1,18 @@
 import sys, pygame, math
 from pygame.locals import *
 from gates import Evaluate
-from generator import GenerateTruthTable, TruthTableError
+from generator import GenerateTruthTable, TruthTableError, LoadTimingWindow
 from datetime import datetime
+from multiprocessing import Process
 
 
-# A gate is a list [image, rect, gate_name_string, [connections_on_input_anchors], on/off] 
+# A gate is a list [image, rect, gate_name_string, [connections_on_input_anchors], on/off, id] 
 def makeGate(name):
     gate = pygame.image.load("gatePics\\" + name + ".png")
     gateRect = gate.get_rect()
     gateRect.center = mouseX,mouseY
-    return([gate,gateRect,name,[],False])
+    id = 0 if not loadedGates else loadedGates[-1][5]+1
+    return([gate,gateRect,name,[],False,id])
 
 # A switch is a list [image, rect, "SWITCH" , [dummy_array],on/off, id] 
 def makeSwitch():
@@ -20,7 +22,7 @@ def makeSwitch():
     id = 0 if not loadedSwitches else loadedSwitches[-1][5]+1
     return([switch,switchRect,"SWITCH",[],False,id])
 
-# A light is a list [image, rect, "LIGHT", [connections],on/off] 
+# A light is a list [image, rect, "LIGHT", [connections],on/off, id] 
 def makeLight():
     light = lightOff
     lightRect = light.get_rect()
@@ -28,12 +30,13 @@ def makeLight():
     id = 0 if not loadedLights else loadedLights[-1][5]+1
     return([light,lightRect,"LIGHT",[],False,id])    
 
-# A clock is a list [image, rect, "CLOCK", [dummy_array], on/off, freq]    
+# A clock is a list [image, rect, "CLOCK", [dummy_array], on/off, id, freq, timestamp]    
 def makeClock():
     clockRect = clockComponent.get_rect()
     clockRect.center = mouseX,mouseY
     freq = .5
-    return([clockComponent, clockRect, "CLOCK", [], False, freq])
+    id = 0 if not loadedClocks else loadedClocks[-1][5]+1
+    return([clockComponent, clockRect, "CLOCK", [], False, id, freq, datetime.utcnow()])
     
 #A line is a matrix list [[start_target_anchor, start_target , start_coords],
 #[end_target_anchor, end_target, end_coords],"LINE",id,on/off]    
@@ -144,6 +147,7 @@ def TurnLight(light, bool):
     
 def Click(clickCoords):
     if not drawingLine:
+        #Flip switch if clicked on
         for switch in loadedSwitches:
             if switch[1].collidepoint(mouseX,mouseY):
                 if switch[4]:
@@ -154,17 +158,24 @@ def Click(clickCoords):
                     switch[4] = True
                 UpdateLights()
                 UpdateLines()
-        #Generate Truth Table
+        #Generate Truth Table & show in new window
         if truthTableButtonRect.collidepoint(mouseX,mouseY):
             for process in childProcesses:
                 process.terminate()
             if(loadedLights and loadedSwitches):
                 if(loadedClocks):
-                    childProcesses.append(TruthTableError("Clock detected, cannot generate truth table"))
+                    childProcesses.append(TruthTableError("Cannot generate accurate truth table with a clock"))
                 else:
                     childProcesses.append(GenerateTruthTable(loadedLights,loadedSwitches,loadedLines))
             else:
                 childProcesses.append(TruthTableError("Please add at least one input and one output"))
+        #Generate Timing Diagram & show in new window
+        if timingButtonRect.collidepoint(mouseX,mouseY):
+            for process in childProcesses:
+                process.terminate()
+            newProcess = Process(target=LoadTimingWindow, args=())
+            newProcess.start()
+            childProcesses.append(newProcess)
         
 def PositionLines():
     for line in loadedLines:
@@ -203,29 +214,35 @@ def UpdateLines():
     for line in loadedLines:
         line[4] = Evaluate(line,loadedLines)
         
-def UpdateClocks(timestamp):
+def UpdateClocks():
     newTime = datetime.utcnow()    
     for clock in loadedClocks:
-        deltaTime = (newTime-timestamp).total_seconds()
-        if deltaTime >= clock[5]:
+        deltaTime = (newTime-clock[7]).total_seconds()
+        if deltaTime >= clock[6]:
             clock[4] = not clock[4]
-            timestamp = newTime            
+            clock[7] = newTime        
         screen.blit(clock[0],clock[1])
-    return timestamp    
+        clockID = font.render('C'+str(clock[5]), True, black)
+        screen.blit(clockID, (clock[1].x+5, clock[1].y+30)) 
        
 def Main():
         
     #Initialize variables 
     pygame.init()
+    pygame.display.set_caption("Interactive Logic")
     
     global size, width, height, screen
     
     size = width, height = 800, 600
     screen=pygame.display.set_mode(size,HWSURFACE|DOUBLEBUF|RESIZABLE)
-
+    
+    global font, black
+    
+    font=pygame.font.Font(None,30)
     white = 255, 255, 255
     black = 0,0,0
     red = 255,0,0
+    green = 0,255,0
     lightRed = 255, 180, 180
     
     global clickCoords,clickOffset,mouseX,mouseY, mouseKey
@@ -266,7 +283,8 @@ def Main():
     global gateSelect, selectRect , lineButton , lineButtonRect
     global switchButton, switchButtonRect , lightButton, lightButtonRect
     global clockButton, clockButtonRect, truthTableButton, truthTableButtonRect
-
+    global timingButton, timingButtonRect
+    
     gateSelect = pygame.image.load("gatePics\GATES.png")
     selectRect = gateSelect.get_rect()
 
@@ -285,7 +303,9 @@ def Main():
     truthTableButton = pygame.image.load("gatePics\TRUTHTABLEBUTTON.png")
     truthTableButtonRect = truthTableButton.get_rect()
     
-    font=pygame.font.Font(None,30)
+    timingButton = pygame.image.load("gatePics\TIMINGBUTTON.png")
+    timingButtonRect = timingButton.get_rect()
+    
 
     #Main Loop
     while True:
@@ -296,7 +316,7 @@ def Main():
         lightButtonRect.midleft = (0, height/2 +75)
         clockButtonRect.midleft = (0, height/2)
         truthTableButtonRect.midleft = (0, height/2 +150)
-        #truthTableButtonRect.midleft = (0, height/2 +225)
+        timingButtonRect.midleft = (0, height/2 +225)
 
         
         #Get Input Events
@@ -394,6 +414,7 @@ def Main():
         screen.blit(lightButton,lightButtonRect)
         screen.blit(clockButton,clockButtonRect)
         screen.blit(truthTableButton,truthTableButtonRect)
+        screen.blit(timingButton,timingButtonRect)
         #draw all gates, switches & Lines
         for target in loadedGates+loadedSwitches+loadedLights+loadedClocks:
             screen.blit(target[0], target[1])  
@@ -415,7 +436,7 @@ def Main():
             pygame.draw.line(screen, color, line[0][2], line[1][2], 2)
         #update clocks
         if loadedClocks:
-            timestamp = UpdateClocks(timestamp)
+            UpdateClocks()
             UpdateLights()
             UpdateLines()
         

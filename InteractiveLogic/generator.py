@@ -4,6 +4,11 @@ from multiprocessing import Process
 from pygame.locals import *
 from gates import Evaluate
 
+global white,black
+
+white = 255, 255, 255
+black = 0,0,0
+    
 def FlipSwitches(order,switches):
     for x in range(len(switches)):
         switches[x][4] = True if order[x] == '1' else False
@@ -16,9 +21,7 @@ def TruthTableError(error):
 
 def LoadErrorWindow(error):
     pygame.init()
-    
-    white = 255, 255, 255
-    black = 0,0,0
+    pygame.display.set_caption("Error")
 
     size = width, height = len(error*10) , 50
     screen=pygame.display.set_mode(size)
@@ -38,10 +41,7 @@ def LoadErrorWindow(error):
         
 def LoadTruthWindow(inputs, outputs, ids):   
     pygame.init()
-    
-    white = 255, 255, 255
-    black = 0,0,0
-
+    pygame.display.set_caption("Truth Table")
     size = width, height = len(inputs[0])*28+len(outputs[0])*28 +55, len(inputs)*50+50
     screen=pygame.display.set_mode(size)
     
@@ -121,5 +121,18 @@ def GenerateTruthTable(loadedLights,loadedSwitches,loadedLines):
     newProcess.start()
     return newProcess
 
+def LoadTimingWindow():
+    pygame.init()
 
+    size = width, height = 400,300
+    screen=pygame.display.set_mode(size)
     
+    while True:
+        screen.fill(white) 
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT: 
+                sys.exit()
+    
+        pygame.display.flip()
+        pygame.time.wait(100)
