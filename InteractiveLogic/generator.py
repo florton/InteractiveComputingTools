@@ -9,13 +9,13 @@ def FlipSwitches(order,switches):
         switches[x][4] = True if order[x] == '1' else False
     return switches   
    
-def TruthWindow(inputs, outputs):   
+def TruthWindow(inputs, outputs, ids):   
     pygame.init()
     
     white = 255, 255, 255
     black = 0,0,0
 
-    size = width, height = len(inputs[0])*20+len(outputs[0])*60 +35, len(inputs)*30+50
+    size = width, height = len(inputs[0])*28+len(outputs[0])*28 +55, len(inputs)*50+50
     screen=pygame.display.set_mode(size)
     
     while True:
@@ -24,20 +24,35 @@ def TruthWindow(inputs, outputs):
         for event in pygame.event.get():
             if event.type == pygame.QUIT: 
                 sys.exit()
-                
-        #draw text
+        
         font=pygame.font.Font(None,30)
+        
+        #Draw I/O Labels
+        firstLine = "  "
+        for input in ids[0]:
+            firstLine += "S"+str(input)+" "
+        firstLine += " | "
+        for output in ids[1]:
+            firstLine += "L"+str(output)+ " "
+        
+        first = font.render(firstLine, True, black)
+        screen.blit(first, (0, 20))
+        
+        second = font.render("".ljust(len(firstLine),'_'), True, black)
+        screen.blit(second, (0, 30))
+        #Draw each I/O line
+
         for x in range(len(inputs)):
             outputString = "   "
             for y in inputs[x]:
-                outputString += y + " "        
-            outputString+= " | "            
+                outputString += y + "   "        
+            outputString+= "|  "            
             for z in outputs[x]:
-                outputString += str(z) + " "
+                outputString += str(z) + "   "
                 
-            info = font.render(outputString, False, black)
+            line = font.render(outputString, True, black)
 
-            screen.blit(info, (0, 50*x+25))
+            screen.blit(line, (0, 50*x+60))
         
         pygame.display.flip()
         pygame.time.wait(100)
@@ -51,6 +66,7 @@ def GenerateTruthTable(loadedLights,loadedSwitches,loadedLines):
 
     inputs = []
     outputs = []
+    ids = [[input[5] for input in loadedSwitches],[output[5] for output in loadedLights]]
     switchNum = len(loadedSwitches)  
     
     #try simulating all switch combinations
@@ -61,7 +77,7 @@ def GenerateTruthTable(loadedLights,loadedSwitches,loadedLines):
         loadedSwitches = FlipSwitches(y,loadedSwitches)           
         inputs.append(list(str(y))) 
         for light in loadedLights:            
-            outputs[x].append(Evaluate(light,loadedLines))
+            outputs[x].append(int(Evaluate(light,loadedLines)))
             
     #put switches back where they were        
     for x in range(len(loadedSwitches)):
@@ -71,7 +87,7 @@ def GenerateTruthTable(loadedLights,loadedSwitches,loadedLines):
     #print outputs
     
     #open truth table window in a new process
-    newProcess = Process(target=TruthWindow, args=(inputs,outputs))
+    newProcess = Process(target=TruthWindow, args=(inputs,outputs,ids))
     newProcess.start()
     return newProcess
 

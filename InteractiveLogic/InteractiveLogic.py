@@ -286,11 +286,13 @@ def Main():
     while True:
         width,height = size
         selectRect.midtop = (width/2,0)
-        lineButtonRect.midleft = (0, height/2 -75)
-        switchButtonRect.midleft = (0, height/2 +75)
-        lightButtonRect.midleft = (0, height/2)
-        clockButtonRect.midleft = (0, height/2 +150)
-        truthTableButtonRect.midleft = (0, height/2 +225)
+        lineButtonRect.midleft = (0, height/2 -150)
+        switchButtonRect.midleft = (0, height/2 -75)
+        lightButtonRect.midleft = (0, height/2 +75)
+        clockButtonRect.midleft = (0, height/2)
+        truthTableButtonRect.midleft = (0, height/2 +150)
+        #truthTableButtonRect.midleft = (0, height/2 +225)
+
         
         #Get Input Events
         for event in pygame.event.get():
