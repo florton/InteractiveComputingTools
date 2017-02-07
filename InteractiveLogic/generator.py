@@ -15,7 +15,7 @@ def TruthWindow(inputs, outputs):
     white = 255, 255, 255
     black = 0,0,0
 
-    size = width, height = len(inputs[0])*50+50, len(inputs)*50+50
+    size = width, height = len(inputs[0])*20+len(outputs[0])*60 +35, len(inputs)*30+50
     screen=pygame.display.set_mode(size)
     
     while True:
@@ -56,22 +56,24 @@ def GenerateTruthTable(loadedLights,loadedSwitches,loadedLines):
     #try simulating all switch combinations
     for x in range(2**switchNum):
         outputs.append([])
-        for light in loadedLights:
-            y = str(bin(x))[2:]
-            y = y.zfill(switchNum)
-            loadedSwitches = FlipSwitches(y,loadedSwitches)
-            
-            inputs.append(list(str(y))) 
-            
+        y = str(bin(x))[2:]
+        y = y.zfill(switchNum)
+        loadedSwitches = FlipSwitches(y,loadedSwitches)           
+        inputs.append(list(str(y))) 
+        for light in loadedLights:            
             outputs[x].append(Evaluate(light,loadedLines))
             
     #put switches back where they were        
     for x in range(len(loadedSwitches)):
         loadedSwitches[x][4] = oldSwitches[x]
     
+    #print inputs
+    #print outputs
+    
     #open truth table window in a new process
     newProcess = Process(target=TruthWindow, args=(inputs,outputs))
     newProcess.start()
+    return newProcess
 
 
     

@@ -25,7 +25,8 @@ def makeLight():
     light = lightOff
     lightRect = light.get_rect()
     lightRect.center = mouseX,mouseY 
-    return([light,lightRect,"LIGHT",[],False])    
+    id = 0 if not loadedLights else loadedLights[-1][5]+1
+    return([light,lightRect,"LIGHT",[],False,id])    
 
 # A clock is a list [image, rect, "CLOCK", [dummy_array], on/off, freq]    
 def makeClock():
@@ -155,10 +156,11 @@ def Click(clickCoords):
                 UpdateLines()
         #Generate Truth Table
         if truthTableButtonRect.collidepoint(mouseX,mouseY):
-            GenerateTruthTable(loadedLights,loadedSwitches,loadedLines)
-
-
-            
+            for process in childProcesses:
+                process.terminate()
+            if(loadedLights and loadedSwitches):
+                childProcesses.append(GenerateTruthTable(loadedLights,loadedSwitches,loadedLines))
+        
 def PositionLines():
     for line in loadedLines:
         newCoords = [(mouseX,mouseY),(mouseX,mouseY)]        
@@ -238,6 +240,10 @@ def Main():
     
     timestamp = datetime.utcnow()
     
+    global childProcesses
+    
+    childProcesses = []
+    
     global gatenames, draggingObject, drawingLine
 
     gateNames = ['AND','OR','NOT','NOR','NAND','XOR','XNOR']
@@ -273,6 +279,8 @@ def Main():
 
     truthTableButton = pygame.image.load("gatePics\TRUTHTABLEBUTTON.png")
     truthTableButtonRect = truthTableButton.get_rect()
+    
+    font=pygame.font.Font(None,30)
 
     #Main Loop
     while True:
@@ -287,6 +295,8 @@ def Main():
         #Get Input Events
         for event in pygame.event.get():
             if event.type == pygame.QUIT: 
+                for process in childProcesses:
+                    process.terminate()
                 sys.exit()
             if event.type == pygame.VIDEORESIZE:
                 size = event.size
@@ -380,12 +390,16 @@ def Main():
         #draw all gates, switches & Lines
         for target in loadedGates+loadedSwitches+loadedLights+loadedClocks:
             screen.blit(target[0], target[1])  
-        #draw all switches
+        #draw all switches & IDs
         for switch in loadedSwitches:
             screen.blit(switch[0],switch[1])
-        #draw all lights
+            switchID = font.render('S'+str(switch[5]), True, black)
+            screen.blit(switchID, (switch[1].x, switch[1].y+30))
+        #draw all lights & IDs
         for light in loadedLights:
             screen.blit(light[0],light[1])
+            lightID = font.render('L'+str(light[5]), True, black)
+            screen.blit(lightID, (light[1].x, light[1].y+30))
         #draw and update all lines
         if draggingObject or drawingLine:
             PositionLines()
@@ -399,7 +413,6 @@ def Main():
             UpdateLines()
         
         #draw text
-        #font=pygame.font.Font(None,30)
         #info1 = font.render("MousePos: "+str(mouseX) + ", "+str(mouseY), False, black)
         #info2 = font.render(str(size)+', ' +  str(width) + ', ' + str(height), False, black)
         #info3 = font.render("MouseKey:" + str(mouseKey), False, black)
