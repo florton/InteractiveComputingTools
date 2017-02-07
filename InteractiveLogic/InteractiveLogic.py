@@ -210,7 +210,10 @@ def UpdateLights():
     #Run Logic Simulation (turn lights on/off)
     for light in loadedLights:
         TurnLight(light, Evaluate(light,loadedLines))
-    timingPipe.send([loadedSwitches,loadedClocks,loadedLights])
+    try:
+        timingPipe.send([loadedSwitches,loadedClocks,loadedLights])
+    except:
+        pass
 
 def UpdateLines():
     #Run Logic Simulation (turn lines on/off)
@@ -334,7 +337,7 @@ def Main():
                 sys.exit()
             if event.type == pygame.VIDEORESIZE:
                 size = event.size
-                screen=pygame.display.set_mode(event.dict['size'],HWSURFACE|DOUBLEBUF|RESIZABLE)
+                screen=pygame.display.set_mode(size,HWSURFACE|DOUBLEBUF|RESIZABLE)
             if event.type == pygame.MOUSEBUTTONDOWN:
                 tempbuttons = [0,0,0]
                 if(event.button <4):
@@ -455,6 +458,7 @@ def Main():
         
         #Update Screen
         pygame.display.flip()
+        pygame.time.wait(10)
         
 if __name__ == '__main__':
     Main()

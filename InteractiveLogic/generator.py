@@ -132,37 +132,42 @@ def LoadTimingWindow(mainProgram):
     pygame.init()
     pygame.display.set_caption("Timing Diagram")
     size = width, height = 400,300
-    screen=pygame.display.set_mode(size)
+    screen=pygame.display.set_mode(size,HWSURFACE|DOUBLEBUF)
     
-    response = ""
+    response = ([],[],[])
     
     while True:
-        screen.fill(white) 
+        size = width,height
         
         for event in pygame.event.get():
             if event.type == pygame.QUIT: 
                 sys.exit()
                 
         font=pygame.font.Font(None,30)
-        try:
+        
+        if(mainProgram.poll()):               
             response = mainProgram.recv()
-        except: 
-            pass
             
         inputs = [(switch[5],switch[4]) for switch in response[0]]
         clocks = [(clock[5],clock[4]) for clock in response[1]]
         outputs = [(light[5],light[4]) for light in response[2]]
-            
+        
+        newSize = len(inputs+outputs+clocks)*50        
+        if(height!=newSize):
+            height = newSize
+            screen=pygame.display.set_mode((width,height),HWSURFACE|DOUBLEBUF)
+        
+        
+        screen.fill(white) 
         
         text0 = font.render(str(inputs), True, black)
-        screen.blit(text0, (0, 0))      
-        text1 = font.render(str(clocks), True, black)
-        screen.blit(text1, (0, 30))      
+        screen.blit(text0, (0, 0))        
         text2 = font.render(str(outputs), True, black)
         screen.blit(text2, (0, 60))
+        text1 = font.render(str(clocks), True, black)
+        screen.blit(text1, (0, 30))    
             
-        pygame.display.flip()
-        
+        pygame.display.flip()        
         pygame.time.wait(100)
         
         
