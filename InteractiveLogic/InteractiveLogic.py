@@ -210,12 +210,12 @@ def UpdateLights():
     #Run Logic Simulation (turn lights on/off)
     for light in loadedLights:
         TurnLight(light, Evaluate(light,loadedLines))
+    timingPipe.send([loadedSwitches,loadedClocks,loadedLights])
 
 def UpdateLines():
     #Run Logic Simulation (turn lines on/off)
     for line in loadedLines:
         line[4] = Evaluate(line,loadedLines)
-    timingPipe.send([loadedSwitches,loadedClocks,loadedLights])
         
 def UpdateClocks():
     newTime = datetime.utcnow()    
@@ -223,11 +223,14 @@ def UpdateClocks():
         deltaTime = (newTime-clock[7]).total_seconds()
         if deltaTime >= clock[6]:
             clock[4] = not clock[4]
-            clock[7] = newTime        
+            clock[7] = newTime 
+            UpdateLights()
+            UpdateLines()
         screen.blit(clock[0],clock[1])
         clockID = font.render('C'+str(clock[5]), True, black)
         screen.blit(clockID, (clock[1].x+5, clock[1].y+30)) 
-       
+    
+    
 def Main():
         
     #Initialize variables 
@@ -441,8 +444,6 @@ def Main():
         #update clocks
         if loadedClocks:
             UpdateClocks()
-            UpdateLights()
-            UpdateLines()
         
         #draw text
         #info1 = font.render("MousePos: "+str(mouseX) + ", "+str(mouseY), False, black)
