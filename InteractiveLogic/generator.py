@@ -8,8 +8,35 @@ def FlipSwitches(order,switches):
     for x in range(len(switches)):
         switches[x][4] = True if order[x] == '1' else False
     return switches   
-   
-def TruthWindow(inputs, outputs, ids):   
+    
+def TruthTableError(error):
+    newProcess = Process(target=LoadErrorWindow, args=([error]))
+    newProcess.start()
+    return newProcess
+
+def LoadErrorWindow(error):
+    pygame.init()
+    
+    white = 255, 255, 255
+    black = 0,0,0
+
+    size = width, height = len(error*10) , 50
+    screen=pygame.display.set_mode(size)
+    
+    while True:
+        screen.fill(white) 
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT: 
+                sys.exit()
+    
+        font=pygame.font.Font(None,30)
+        errorLine = font.render(error, True, black)
+        screen.blit(errorLine, (0, 10))
+    
+        pygame.display.flip()
+        pygame.time.wait(100)
+        
+def LoadTruthWindow(inputs, outputs, ids):   
     pygame.init()
     
     white = 255, 255, 255
@@ -76,8 +103,11 @@ def GenerateTruthTable(loadedLights,loadedSwitches,loadedLines):
         y = y.zfill(switchNum)
         loadedSwitches = FlipSwitches(y,loadedSwitches)           
         inputs.append(list(str(y))) 
-        for light in loadedLights:            
-            outputs[x].append(int(Evaluate(light,loadedLines)))
+        for light in loadedLights:  
+            result = Evaluate(light,loadedLines,True)
+            if result is None:
+                return TruthTableError("Loop detected, cannot generate truth table");
+            outputs[x].append(int(result))
             
     #put switches back where they were        
     for x in range(len(loadedSwitches)):
@@ -87,7 +117,7 @@ def GenerateTruthTable(loadedLights,loadedSwitches,loadedLines):
     #print outputs
     
     #open truth table window in a new process
-    newProcess = Process(target=TruthWindow, args=(inputs,outputs,ids))
+    newProcess = Process(target=LoadTruthWindow, args=(inputs,outputs,ids))
     newProcess.start()
     return newProcess
 

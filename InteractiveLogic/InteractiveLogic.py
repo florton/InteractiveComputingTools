@@ -1,7 +1,7 @@
 import sys, pygame, math
 from pygame.locals import *
 from gates import Evaluate
-from generator import GenerateTruthTable, TruthWindow
+from generator import GenerateTruthTable, TruthTableError
 from datetime import datetime
 
 
@@ -159,7 +159,12 @@ def Click(clickCoords):
             for process in childProcesses:
                 process.terminate()
             if(loadedLights and loadedSwitches):
-                childProcesses.append(GenerateTruthTable(loadedLights,loadedSwitches,loadedLines))
+                if(loadedClocks):
+                    childProcesses.append(TruthTableError("Clock detected, cannot generate truth table"))
+                else:
+                    childProcesses.append(GenerateTruthTable(loadedLights,loadedSwitches,loadedLines))
+            else:
+                childProcesses.append(TruthTableError("Please add at least one input and one output"))
         
 def PositionLines():
     for line in loadedLines:

@@ -20,11 +20,11 @@ def Xnor(first, second=False, *args):
 def CheckLoop(pathList,id):
     return pathList.count(id) > 1
         
-def Evaluate(component,loadedLines):
+def Evaluate(component,loadedLines,breakOnLoop = False):
     pathList = []
-    return BuildTree(component,pathList,loadedLines)
+    return BuildTree(component,pathList,loadedLines,breakOnLoop)
 
-def BuildTree(component,pathList,loadedLines):
+def BuildTree(component,pathList,loadedLines,breakOnLoop):
     if not component:
         return False
     name = component[2]
@@ -32,6 +32,8 @@ def BuildTree(component,pathList,loadedLines):
         connections = [component[0][1]]
         pathList.append(component[3])
         if CheckLoop(pathList, component[3]):
+            if breakOnLoop:
+                return None
             currentVal = next((line for line in loadedLines if line[3] == component[3]), None)[4]
             return currentVal
     else:
@@ -39,7 +41,9 @@ def BuildTree(component,pathList,loadedLines):
     paths = []
 
     for path in connections:
-        result = BuildTree(path,pathList,loadedLines)
+        result = BuildTree(path,pathList,loadedLines,breakOnLoop)
+        if result is None:
+            return None
         paths.append(result)        
     if not paths:
         paths = [False]  
