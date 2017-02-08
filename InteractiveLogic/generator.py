@@ -39,7 +39,7 @@ def LoadErrorWindow(error):
         screen.blit(errorLine, (0, 10))
 
         pygame.display.flip()
-        pygame.time.wait(100)
+        #pygame.time.wait(100)
 
 def LoadTruthWindow(inputs, outputs, ids):
     pygame.init()
@@ -84,7 +84,7 @@ def LoadTruthWindow(inputs, outputs, ids):
             screen.blit(line, (0, 50*x+60))
 
         pygame.display.flip()
-        pygame.time.wait(100)
+        #pygame.time.wait(100)
 
 
 def GenerateTruthTable(loadedLights,loadedSwitches,loadedLines):
@@ -128,30 +128,35 @@ def GenerateTimingDiagram():
     parentConnection, childConnection = Pipe()
     newProcess = Process(target=LoadTimingWindow, args=(childConnection,))
     newProcess.start()
-    return newProcess,parentConnection
+    return newProcess,parentConnection   
 
 def LoadTimingWindow(mainProgram):
     pygame.init()
     pygame.display.set_caption("Timing Diagram")
     size = width, height = 600,300
     screen=pygame.display.set_mode(size,HWSURFACE|DOUBLEBUF|RESIZABLE)
-
+    defaultWidth = 600
     dataPoints = []
     componentCount = [1,1]
 
     startIndex = 0
-    timeOnScreen = 50
+    timeOnScreen = 20
+     
+    #isPaused = False
 
     while True:
         size = width,height
-
+        
+        nowTime = datetime.utcnow()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
-        if event.type == pygame.VIDEORESIZE:
-            pass
-            #width = event.size[0]
-            #screen=pygame.display.set_mode(size,HWSURFACE|DOUBLEBUF|RESIZABLE)
+        if event.type == pygame.VIDEORESIZE:         
+            size = width,height = event.size
+            screen=pygame.display.set_mode(size,HWSURFACE|DOUBLEBUF|RESIZABLE)
+            for datapoint in dataPoints:
+                datapoint[0] += (datetime.utcnow() - nowTime)
+            nowTime = datetime.utcnow()
 
         font=pygame.font.Font(None,30)
 
@@ -172,7 +177,7 @@ def LoadTimingWindow(mainProgram):
         if(componentCount[0] != componentCount[1]):
             height = componentCount[1]*80+30
             componentCount[0] = componentCount[1]
-            screen=pygame.display.set_mode((width,height),HWSURFACE|DOUBLEBUF|RESIZABLE)
+            #screen=pygame.display.set_mode((width,height),HWSURFACE|DOUBLEBUF|RESIZABLE)
             dataPoints = [dataPoints[-1]]
 
         screen.fill(white)
@@ -181,10 +186,10 @@ def LoadTimingWindow(mainProgram):
         for x in range(len(dataPoints[-1][1])):
             label = font.render(dataPoints[-1][1][x][0], True, black)
             screen.blit(label, (10, (80*x)+20 ))
-
+            
         for x in range(len(dataPoints)):
-            timeStampDelta = (datetime.utcnow()-tempDataPoints[x][0]).total_seconds()
-            nextTimestampDelta = (datetime.utcnow()-tempDataPoints[x+1][0]).total_seconds()
+            timeStampDelta = (nowTime-tempDataPoints[x][0]).total_seconds()
+            nextTimestampDelta = (nowTime-tempDataPoints[x+1][0]).total_seconds()
             if (timeStampDelta > timeOnScreen and startIndex < len(tempDataPoints)-1):
                 startIndex+=1
                 continue
@@ -192,9 +197,9 @@ def LoadTimingWindow(mainProgram):
                 for i in range(len(tempDataPoints[x][1])):
                     value = tempDataPoints[x][1][i][1]
                     color = green if value else red
-                    height = 80*(i+1) if color is red else 80*(i+1)-30
-                    startPoint = timeStampDelta*(width/timeOnScreen), height
-                    endPoint = nextTimestampDelta*(width/timeOnScreen), height
+                    lineHeight = 80*(i+1) if color is red else 80*(i+1)-30
+                    startPoint = timeStampDelta*(defaultWidth/timeOnScreen), lineHeight
+                    endPoint = nextTimestampDelta*(defaultWidth/timeOnScreen), lineHeight
                     pygame.draw.line(screen, color , startPoint, endPoint ,10)
 
 
