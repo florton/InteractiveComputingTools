@@ -137,7 +137,7 @@ def LoadTimingWindow(mainProgram):
     screen=pygame.display.set_mode(size,HWSURFACE|DOUBLEBUF)
 
     dataPoints = []
-    windowSize = 1
+    componentCount = [1,1]
 
     startIndex = 0
     timeOnScreen = 20
@@ -162,21 +162,19 @@ def LoadTimingWindow(mainProgram):
             #Each datapoint = [timestamp, [(componentId,True/False),...]]
             data = [datetime.utcnow(),inputs+outputs+clocks]
             dataPoints.append(data)
-            windowSize = len(dataPoints[-1][1])*60
+            componentCount[1] = len(dataPoints[-1][1])
 
-        #print height
-        #print windowSize
-        if(height != windowSize):
-            height = windowSize
+
+        if(componentCount[0] != componentCount[1]):
+            height = componentCount[1]*60
+            componentCount[0] = componentCount[1]
             screen=pygame.display.set_mode((width,height),HWSURFACE|DOUBLEBUF)
-            #dataPoints = [dataPoints[-1]]
-            
+            dataPoints = [dataPoints[-1]]
+
         screen.fill(white)
 
         tempDataPoints = dataPoints + [[datetime.utcnow(),dataPoints[-1][1]]]
         for x in range(len(dataPoints)):
-            #print tempDataPoints
-            #print startIndex
             timeStampDelta = (datetime.utcnow()-tempDataPoints[x][0]).total_seconds()
             nextTimestampDelta = (datetime.utcnow()-tempDataPoints[x+1][0]).total_seconds()
             if (timeStampDelta > timeOnScreen and startIndex < len(tempDataPoints)-1):
@@ -190,8 +188,6 @@ def LoadTimingWindow(mainProgram):
                     height = 50*itemPosition if color is red else 50*itemPosition-20
                     startPoint = timeStampDelta*(width/timeOnScreen), height
                     endPoint = nextTimestampDelta*(width/timeOnScreen), height
-                    #print startPoint
-                    #print endPoint
                     pygame.draw.line(screen, color , startPoint, endPoint ,5)
                     itemPosition+=1
 
