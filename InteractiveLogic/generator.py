@@ -159,9 +159,9 @@ def LoadTimingWindow(mainProgram):
             #response = [loadedSwitches,loadedClocks,loadedLights]
             response = mainProgram.recv()
 
-            inputs = [(switch[5],switch[4]) for switch in response[0]]
-            clocks = [(clock[5],clock[4]) for clock in response[1]]
-            outputs = [(light[5],light[4]) for light in response[2]]
+            inputs = [("S"+str(switch[5]),switch[4]) for switch in response[0]]
+            clocks = [("C"+str(clock[5]),clock[4]) for clock in response[1]]
+            outputs = [("L"+str(light[5]),light[4]) for light in response[2]]
 
             #Each datapoint = [timestamp, [(componentId,True/False),...]]
             data = [datetime.utcnow(),inputs+outputs+clocks]
@@ -178,6 +178,10 @@ def LoadTimingWindow(mainProgram):
         screen.fill(white)
 
         tempDataPoints = dataPoints + [[datetime.utcnow(),dataPoints[-1][1]]]
+        for x in range(len(dataPoints[-1][1])):
+            label = font.render(dataPoints[-1][1][x][0], True, black)
+            screen.blit(label, (10, (80*x)+20 ))
+
         for x in range(len(dataPoints)):
             timeStampDelta = (datetime.utcnow()-tempDataPoints[x][0]).total_seconds()
             nextTimestampDelta = (datetime.utcnow()-tempDataPoints[x+1][0]).total_seconds()
@@ -185,15 +189,13 @@ def LoadTimingWindow(mainProgram):
                 startIndex+=1
                 continue
             else:
-                itemPosition = 1
                 for i in range(len(tempDataPoints[x][1])):
                     value = tempDataPoints[x][1][i][1]
                     color = green if value else red
-                    height = 80*itemPosition if color is red else 80*itemPosition-30
+                    height = 80*(i+1) if color is red else 80*(i+1)-30
                     startPoint = timeStampDelta*(width/timeOnScreen), height
                     endPoint = nextTimestampDelta*(width/timeOnScreen), height
                     pygame.draw.line(screen, color , startPoint, endPoint ,10)
-                    itemPosition+=1
 
 
         #pygame.time.wait(10)
