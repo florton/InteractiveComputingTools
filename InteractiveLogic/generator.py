@@ -3,17 +3,19 @@ import subprocess
 from multiprocessing import Process, Pipe
 from pygame.locals import *
 from gates import Evaluate
+from datetime import datetime
 
-global white,black
-
+global white,black, green, red
 white = 255, 255, 255
 black = 0,0,0
-    
+red = 255,0,0
+green = 0,255,0
+
 def FlipSwitches(order,switches):
     for x in range(len(switches)):
         switches[x][4] = True if order[x] == '1' else False
-    return switches   
-    
+    return switches
+
 def TruthTableError(error):
     newProcess = Process(target=LoadErrorWindow, args=([error]))
     newProcess.start()
@@ -25,35 +27,35 @@ def LoadErrorWindow(error):
 
     size = width, height = len(error*10) , 50
     screen=pygame.display.set_mode(size)
-    
+
     while True:
-        screen.fill(white) 
+        screen.fill(white)
         for event in pygame.event.get():
-            if event.type == pygame.QUIT: 
+            if event.type == pygame.QUIT:
                 sys.exit()
-    
+
         font=pygame.font.Font(None,30)
         errorLine = font.render(error, True, black)
         screen.blit(errorLine, (0, 10))
-    
+
         pygame.display.flip()
         pygame.time.wait(100)
-        
-def LoadTruthWindow(inputs, outputs, ids):   
+
+def LoadTruthWindow(inputs, outputs, ids):
     pygame.init()
     pygame.display.set_caption("Truth Table")
     size = width, height = len(inputs[0])*28+len(outputs[0])*28 +55, len(inputs)*50+50
     screen=pygame.display.set_mode(size)
-    
+
     while True:
-        screen.fill(white) 
-        
+        screen.fill(white)
+
         for event in pygame.event.get():
-            if event.type == pygame.QUIT: 
+            if event.type == pygame.QUIT:
                 sys.exit()
-        
+
         font=pygame.font.Font(None,30)
-        
+
         #Draw I/O Labels
         firstLine = "  "
         for input in ids[0]:
@@ -61,10 +63,10 @@ def LoadTruthWindow(inputs, outputs, ids):
         firstLine += " | "
         for output in ids[1]:
             firstLine += "L"+str(output)+ " "
-        
+
         first = font.render(firstLine, True, black)
         screen.blit(first, (0, 20))
-        
+
         second = font.render("".ljust(len(firstLine),'_'), True, black)
         screen.blit(second, (0, 30))
         #Draw each I/O line
@@ -72,19 +74,19 @@ def LoadTruthWindow(inputs, outputs, ids):
         for x in range(len(inputs)):
             outputString = "   "
             for y in inputs[x]:
-                outputString += y + "   "        
-            outputString+= "|  "            
+                outputString += y + "   "
+            outputString+= "|  "
             for z in outputs[x]:
                 outputString += str(z) + "   "
-                
+
             line = font.render(outputString, True, black)
 
             screen.blit(line, (0, 50*x+60))
-        
+
         pygame.display.flip()
         pygame.time.wait(100)
-        
-    
+
+
 def GenerateTruthTable(loadedLights,loadedSwitches,loadedLines):
     #save current switch states
     oldSwitches = []
@@ -94,33 +96,33 @@ def GenerateTruthTable(loadedLights,loadedSwitches,loadedLines):
     inputs = []
     outputs = []
     ids = [[input[5] for input in loadedSwitches],[output[5] for output in loadedLights]]
-    switchNum = len(loadedSwitches)  
-    
+    switchNum = len(loadedSwitches)
+
     #try simulating all switch combinations
     for x in range(2**switchNum):
         outputs.append([])
         y = str(bin(x))[2:]
         y = y.zfill(switchNum)
-        loadedSwitches = FlipSwitches(y,loadedSwitches)           
-        inputs.append(list(str(y))) 
-        for light in loadedLights:  
+        loadedSwitches = FlipSwitches(y,loadedSwitches)
+        inputs.append(list(str(y)))
+        for light in loadedLights:
             result = Evaluate(light,loadedLines,True)
             if result is None:
                 return TruthTableError("Loop detected, cannot generate truth table");
             outputs[x].append(int(result))
-            
-    #put switches back where they were        
+
+    #put switches back where they were
     for x in range(len(loadedSwitches)):
         loadedSwitches[x][4] = oldSwitches[x]
-    
+
     #print inputs
     #print outputs
-    
+
     #open truth table window in a new process
     newProcess = Process(target=LoadTruthWindow, args=(inputs,outputs,ids))
     newProcess.start()
     return newProcess
-    
+
 def GenerateTimingDiagram():
     #open timing window in a new process
     parentConnection, childConnection = Pipe()
@@ -133,51 +135,66 @@ def LoadTimingWindow(mainProgram):
     pygame.display.set_caption("Timing Diagram")
     size = width, height = 400,300
     screen=pygame.display.set_mode(size,HWSURFACE|DOUBLEBUF)
-    
-    response = ([],[],[])
-    
+
+    dataPoints = []
+    windowSize = 1
+
+    startIndex = 0
+    timeOnScreen = 20
+
     while True:
         size = width,height
-        
+
         for event in pygame.event.get():
-            if event.type == pygame.QUIT: 
+            if event.type == pygame.QUIT:
                 sys.exit()
-                
+
         font=pygame.font.Font(None,30)
-        
-        if(mainProgram.poll()):               
+
+        if(mainProgram.poll()):
+            #response = [loadedSwitches,loadedClocks,loadedLights]
             response = mainProgram.recv()
-            
-        inputs = [(switch[5],switch[4]) for switch in response[0]]
-        clocks = [(clock[5],clock[4]) for clock in response[1]]
-        outputs = [(light[5],light[4]) for light in response[2]]
-        
-        newSize = len(inputs+outputs+clocks)*50        
-        if(height!=newSize):
-            height = newSize
+
+            inputs = [(switch[5],switch[4]) for switch in response[0]]
+            clocks = [(clock[5],clock[4]) for clock in response[1]]
+            outputs = [(light[5],light[4]) for light in response[2]]
+
+            #Each datapoint = [timestamp, [(componentId,True/False),...]]
+            data = [datetime.utcnow(),inputs+outputs+clocks]
+            dataPoints.append(data)
+            windowSize = len(dataPoints[-1][1])*60
+
+        #print height
+        #print windowSize
+        if(height != windowSize):
+            height = windowSize
             screen=pygame.display.set_mode((width,height),HWSURFACE|DOUBLEBUF)
-        
-        
-        screen.fill(white) 
-        
-        text0 = font.render(str(inputs), True, black)
-        screen.blit(text0, (0, 0))        
-        text2 = font.render(str(outputs), True, black)
-        screen.blit(text2, (0, 60))
-        text1 = font.render(str(clocks), True, black)
-        screen.blit(text1, (0, 30))    
+            #dataPoints = [dataPoints[-1]]
             
-        pygame.display.flip()        
+        screen.fill(white)
+
+        tempDataPoints = dataPoints + [[datetime.utcnow(),dataPoints[-1][1]]]
+        for x in range(len(dataPoints)):
+            #print tempDataPoints
+            #print startIndex
+            timeStampDelta = (datetime.utcnow()-tempDataPoints[x][0]).total_seconds()
+            nextTimestampDelta = (datetime.utcnow()-tempDataPoints[x+1][0]).total_seconds()
+            if (timeStampDelta > timeOnScreen and startIndex < len(tempDataPoints)-1):
+                startIndex+=1
+                continue
+            else:
+                itemPosition = 1
+                for i in range(len(tempDataPoints[x][1])):
+                    value = tempDataPoints[x][1][i][1]
+                    color = green if value else red
+                    height = 50*itemPosition if color is red else 50*itemPosition-20
+                    startPoint = timeStampDelta*(width/timeOnScreen), height
+                    endPoint = nextTimestampDelta*(width/timeOnScreen), height
+                    #print startPoint
+                    #print endPoint
+                    pygame.draw.line(screen, color , startPoint, endPoint ,5)
+                    itemPosition+=1
+
+
         pygame.time.wait(100)
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+        pygame.display.flip()

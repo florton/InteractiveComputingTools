@@ -3,7 +3,6 @@ from pygame.locals import *
 from gates import Evaluate
 from generator import GenerateTruthTable, TruthTableError, GenerateTimingDiagram
 from datetime import datetime
-#from multiprocessing import Process
 
 
 # A gate is a list [image, rect, gate_name_string, [connections_on_input_anchors], on/off, id] 
@@ -327,7 +326,6 @@ def Main():
         clockButtonRect.midleft = (0, height/2)
         truthTableButtonRect.midleft = (0, height/2 +150)
         timingButtonRect.midleft = (0, height/2 +225)
-
         
         #Get Input Events
         for event in pygame.event.get():
@@ -357,7 +355,7 @@ def Main():
                 mouseX,mouseY = event.pos
                 mouseKey = event.buttons
                 
-        #Move gate/switch if cursor clicks&drags     
+        #Move gate/switch if cursor clicks & drags     
         if draggingObject and not drawingLine:
             draggingObject[1].topleft = mouseX - clickOffset[0] , mouseY - clickOffset[1] 
         elif mouseKey[0] == 1:
@@ -374,7 +372,7 @@ def Main():
                 Delete(draggingObject)
             draggingObject = None
         
-        #Right Click
+        #Hold Right Click
         if mouseKey[2] == 1:
             #Delete any partially drawn line and stop drawing new lines
             if drawingLine == 1 or drawingLine == 2:
@@ -392,6 +390,7 @@ def Main():
                 if object[1].collidepoint(mouseX,mouseY):
                     Delete(object)
         
+        #Hold Left Click
         if mouseKey[0] == 1 and not draggingObject and not drawingLine:
             #Spawn new gates
             if selectRect.collidepoint(mouseX,mouseY):
@@ -458,7 +457,7 @@ def Main():
         
         #Update Screen
         pygame.display.flip()
-        pygame.time.wait(10)
+        #pygame.time.wait(10)
         
 if __name__ == '__main__':
     Main()
