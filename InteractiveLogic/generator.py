@@ -133,14 +133,14 @@ def GenerateTimingDiagram():
 def LoadTimingWindow(mainProgram):
     pygame.init()
     pygame.display.set_caption("Timing Diagram")
-    size = width, height = 400,300
-    screen=pygame.display.set_mode(size,HWSURFACE|DOUBLEBUF)
+    size = width, height = 600,300
+    screen=pygame.display.set_mode(size,HWSURFACE|DOUBLEBUF|RESIZABLE)
 
     dataPoints = []
     componentCount = [1,1]
 
     startIndex = 0
-    timeOnScreen = 20
+    timeOnScreen = 50
 
     while True:
         size = width,height
@@ -148,6 +148,10 @@ def LoadTimingWindow(mainProgram):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
+        if event.type == pygame.VIDEORESIZE:
+            pass
+            #width = event.size[0]
+            #screen=pygame.display.set_mode(size,HWSURFACE|DOUBLEBUF|RESIZABLE)
 
         font=pygame.font.Font(None,30)
 
@@ -166,9 +170,9 @@ def LoadTimingWindow(mainProgram):
 
 
         if(componentCount[0] != componentCount[1]):
-            height = componentCount[1]*60
+            height = componentCount[1]*80+30
             componentCount[0] = componentCount[1]
-            screen=pygame.display.set_mode((width,height),HWSURFACE|DOUBLEBUF)
+            screen=pygame.display.set_mode((width,height),HWSURFACE|DOUBLEBUF|RESIZABLE)
             dataPoints = [dataPoints[-1]]
 
         screen.fill(white)
@@ -185,12 +189,12 @@ def LoadTimingWindow(mainProgram):
                 for i in range(len(tempDataPoints[x][1])):
                     value = tempDataPoints[x][1][i][1]
                     color = green if value else red
-                    height = 50*itemPosition if color is red else 50*itemPosition-20
+                    height = 80*itemPosition if color is red else 80*itemPosition-30
                     startPoint = timeStampDelta*(width/timeOnScreen), height
                     endPoint = nextTimestampDelta*(width/timeOnScreen), height
-                    pygame.draw.line(screen, color , startPoint, endPoint ,5)
+                    pygame.draw.line(screen, color , startPoint, endPoint ,10)
                     itemPosition+=1
 
 
-        pygame.time.wait(100)
+        #pygame.time.wait(10)
         pygame.display.flip()
