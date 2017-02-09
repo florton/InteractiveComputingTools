@@ -142,22 +142,27 @@ def LoadTimingWindow(mainProgram):
     startIndex = 0
     timeOnScreen = 20
     nowTime = datetime.utcnow()
-    lastPausedTime = datetime.utcnow()
 
-    #isDraggingWindow = False
-    #isPaused = False
+    isPaused = False
+    hasClicked = False
+
+    playButton = pygame.image.load("gatePics\Timing\PLAY.png")
+    playPauseButtonRect = playButton.get_rect()
+
+    pauseButton = pygame.image.load("gatePics\Timing\PAUSE.png")
 
     while True:
         size = width,height
+
+        playPauseButtonRect.midtop = width/2,0
 
         #Pause if window is dragging
         if (datetime.utcnow()-nowTime).total_seconds() > 0.1:
             for dataPoint in dataPoints:
                 dataPoint[0] += (datetime.utcnow()-nowTime)
-            lastPausedTime = nowTime
             nowTime = datetime.utcnow()
 
-        nowTime = datetime.utcnow()
+        nowTime = datetime.utcnow() if not isPaused else nowTime
 
         #Handle window close & window resize events
         for event in pygame.event.get():
@@ -166,6 +171,15 @@ def LoadTimingWindow(mainProgram):
         if event.type == pygame.VIDEORESIZE:
             size = width,height = event.size
             screen=pygame.display.set_mode(size,HWSURFACE|DOUBLEBUF|RESIZABLE)
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            #Left click
+            if event.button == 1:
+                if playPauseButtonRect.collidepoint(event.pos) and not hasClicked:
+                    isPaused = not isPaused
+                hasClicked = True
+        if event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 1:
+                hasClicked = False
 
         font=pygame.font.Font(None,30)
 
@@ -174,7 +188,7 @@ def LoadTimingWindow(mainProgram):
             #response = [loadedSwitches,loadedClocks,loadedLights,parentTimestamp]
             response = mainProgram.recv()
             timeSinceResponse = (nowTime - response[3]).total_seconds()
-            print timeSinceResponse
+            #print timeSinceResponse
 
             if abs(timeSinceResponse) < 0.01 or not dataPoints:
                 inputs = [("S"+str(switch[5]),switch[4]) for switch in response[0]]
@@ -196,6 +210,11 @@ def LoadTimingWindow(mainProgram):
 
         #Draw lines & labels
         screen.fill(white)
+
+        if isPaused:
+            screen.blit(playButton,playPauseButtonRect)
+        else:
+            screen.blit(pauseButton,playPauseButtonRect)
 
         tempDataPoints = dataPoints + [[datetime.utcnow(),dataPoints[-1][1]]]
         for x in range(len(dataPoints[-1][1])):
