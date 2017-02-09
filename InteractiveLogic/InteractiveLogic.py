@@ -33,7 +33,7 @@ def makeLight():
 def makeClock():
     clockRect = clockComponent.get_rect()
     clockRect.center = mouseX,mouseY
-    freq = .5
+    freq = 1
     id = 0 if not loadedClocks else loadedClocks[-1][5]+1
     return([clockComponent, clockRect, "CLOCK", [], False, id, freq, datetime.utcnow()])
 

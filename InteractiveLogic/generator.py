@@ -157,7 +157,7 @@ def LoadTimingWindow(mainProgram):
         playPauseButtonRect.midtop = width/2,0
 
         #Pause if window is dragging
-        if (datetime.utcnow()-nowTime).total_seconds() > 0.3:
+        if (datetime.utcnow()-nowTime).total_seconds() > 0.1:
             for dataPoint in dataPoints:
                 dataPoint[0] += (datetime.utcnow()-nowTime)
             nowTime = datetime.utcnow()
@@ -191,7 +191,7 @@ def LoadTimingWindow(mainProgram):
             timeSinceResponse = (nowTime - response[3]).total_seconds()
             #print timeSinceResponse
 
-            if abs(timeSinceResponse) < 0.01 or not dataPoints:
+            if abs(timeSinceResponse) < 0.03 or not dataPoints:
                 inputs = [("S"+str(switch[5]),switch[4]) for switch in response[0]]
                 clocks = [("C"+str(clock[5]),clock[4]) for clock in response[1]]
                 outputs = [("L"+str(light[5]),light[4]) for light in response[2]]
