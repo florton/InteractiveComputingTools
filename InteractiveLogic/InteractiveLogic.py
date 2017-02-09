@@ -95,8 +95,9 @@ def makeLine(mouseX,mouseY,target,drawingLine):
             #add current line to end target connections array
             target[3].append(loadedLines[-1])
             #print target
+        UpdateLines()            
         UpdateLights()
-        UpdateLines()
+
         return 3
     return 2
 
@@ -133,8 +134,9 @@ def DeleteLine(line):
     except:
         pass
     loadedLines.remove(line)
-    UpdateLights()
     UpdateLines()
+    UpdateLights()
+
 
 def TurnLight(light, bool):
     if bool:
@@ -155,8 +157,10 @@ def Click(clickCoords):
                 else:
                     switch[0] = switchOn
                     switch[4] = True
-                UpdateLights()
+                    
                 UpdateLines()
+                UpdateLights()
+
         #Generate Truth Table & show in new window
         if truthTableButtonRect.collidepoint(mouseX,mouseY):
             for process in childProcesses:
@@ -209,7 +213,7 @@ def UpdateLights():
     #Run Logic Simulation (turn lights on/off)
     for light in loadedLights:
         TurnLight(light, Evaluate(light,loadedLines))
-    if childProcesses:
+    if childProcesses and timingPipe:
         timingPipe.send([loadedSwitches,loadedClocks,loadedLights,datetime.utcnow()])
 
 def UpdateLines():
@@ -224,8 +228,8 @@ def UpdateClocks():
         if deltaTime >= clock[6]:
             clock[4] = not clock[4]
             clock[7] = newTime
+            UpdateLines()            
             UpdateLights()
-            UpdateLines()
         screen.blit(clock[0],clock[1])
         clockID = font.render('C'+str(clock[5]), True, black)
         screen.blit(clockID, (clock[1].x+5, clock[1].y+30))
@@ -415,7 +419,7 @@ def Main():
 
         #Check if component count has changes since last Loop
         if(len(loadedSwitches+loadedLights+loadedClocks) != totalInputOutputCount):
-            if childProcesses:
+            if childProcesses and timingPipe:
                 timingPipe.send([loadedSwitches,loadedClocks,loadedLights,datetime.utcnow()])
             totalInputOutputCount = len(loadedSwitches+loadedLights+loadedClocks)
 
@@ -463,6 +467,7 @@ def Main():
         for process in childProcesses:
             if not process.is_alive():
                 childProcesses.remove(process)
+                timingPipe = None
 
         #Update Screen
         pygame.display.flip()
