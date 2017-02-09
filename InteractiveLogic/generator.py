@@ -189,7 +189,7 @@ def LoadTimingWindow(mainProgram):
             #response = [loadedSwitches,loadedClocks,loadedLights,parentTimestamp]
             response = mainProgram.recv()
             timeSinceResponse = (nowTime - response[3]).total_seconds()
-            print timeSinceResponse
+            #print timeSinceResponse
 
             if abs(timeSinceResponse) < 0.01 or not dataPoints:
                 inputs = [("S"+str(switch[5]),switch[4]) for switch in response[0]]

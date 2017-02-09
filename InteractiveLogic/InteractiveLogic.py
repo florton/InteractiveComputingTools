@@ -462,9 +462,7 @@ def Main():
 
         for process in childProcesses:
             if not process.is_alive():
-                print childProcesses
                 childProcesses.remove(process)
-                print childProcesses
 
         #Update Screen
         pygame.display.flip()
