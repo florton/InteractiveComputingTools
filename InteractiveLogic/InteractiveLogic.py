@@ -176,7 +176,7 @@ def Click(clickCoords):
             childProcesses.append(result[0])
             global timingPipe
             timingPipe = result[1]
-            timingPipe.send([loadedSwitches,loadedClocks,loadedLights])
+            timingPipe.send([loadedSwitches,loadedClocks,loadedLights,datetime.utcnow()])
 
 def PositionLines():
     for line in loadedLines:
@@ -210,7 +210,7 @@ def UpdateLights():
     for light in loadedLights:
         TurnLight(light, Evaluate(light,loadedLines))
     try:
-        timingPipe.send([loadedSwitches,loadedClocks,loadedLights])
+        timingPipe.send([loadedSwitches,loadedClocks,loadedLights,datetime.utcnow()])
     except:
         pass
 
@@ -418,7 +418,7 @@ def Main():
         #Check if component count has changes since last Loop
         if(len(loadedSwitches+loadedLights+loadedClocks) != totalInputOutputCount):
             try:
-                timingPipe.send([loadedSwitches,loadedClocks,loadedLights])
+                timingPipe.send([loadedSwitches,loadedClocks,loadedLights,datetime.utcnow()])
             except:
                 pass
             totalInputOutputCount = len(loadedSwitches+loadedLights+loadedClocks)

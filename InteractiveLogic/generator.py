@@ -128,7 +128,7 @@ def GenerateTimingDiagram():
     parentConnection, childConnection = Pipe()
     newProcess = Process(target=LoadTimingWindow, args=(childConnection,))
     newProcess.start()
-    return newProcess,parentConnection   
+    return newProcess,parentConnection
 
 def LoadTimingWindow(mainProgram):
     pygame.init()
@@ -141,52 +141,67 @@ def LoadTimingWindow(mainProgram):
 
     startIndex = 0
     timeOnScreen = 20
-     
+    nowTime = datetime.utcnow()
+    lastPausedTime = datetime.utcnow()
+
+    #isDraggingWindow = False
     #isPaused = False
 
     while True:
         size = width,height
-        
+
+        #Pause if window is dragging
+        if (datetime.utcnow()-nowTime).total_seconds() > 0.1:
+            for dataPoint in dataPoints:
+                dataPoint[0] += (datetime.utcnow()-nowTime)
+            lastPausedTime = nowTime
+            nowTime = datetime.utcnow()
+
         nowTime = datetime.utcnow()
+
+        #Handle window close & window resize events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
-        if event.type == pygame.VIDEORESIZE:         
+        if event.type == pygame.VIDEORESIZE:
             size = width,height = event.size
             screen=pygame.display.set_mode(size,HWSURFACE|DOUBLEBUF|RESIZABLE)
-            for datapoint in dataPoints:
-                datapoint[0] += (datetime.utcnow() - nowTime)
-            nowTime = datetime.utcnow()
 
         font=pygame.font.Font(None,30)
 
+        #Get pipe info from main program
         if(mainProgram.poll()):
-            #response = [loadedSwitches,loadedClocks,loadedLights]
+            #response = [loadedSwitches,loadedClocks,loadedLights,parentTimestamp]
             response = mainProgram.recv()
+            timeSinceResponse = (nowTime - response[3]).total_seconds()
+            print timeSinceResponse
 
-            inputs = [("S"+str(switch[5]),switch[4]) for switch in response[0]]
-            clocks = [("C"+str(clock[5]),clock[4]) for clock in response[1]]
-            outputs = [("L"+str(light[5]),light[4]) for light in response[2]]
+            if abs(timeSinceResponse) < 0.01 or not dataPoints:
+                inputs = [("S"+str(switch[5]),switch[4]) for switch in response[0]]
+                clocks = [("C"+str(clock[5]),clock[4]) for clock in response[1]]
+                outputs = [("L"+str(light[5]),light[4]) for light in response[2]]
 
-            #Each datapoint = [timestamp, [(componentId,True/False),...]]
-            data = [datetime.utcnow(),inputs+outputs+clocks]
-            dataPoints.append(data)
-            componentCount[1] = len(dataPoints[-1][1])
+                #Each datapoint = [timestamp, [(componentId,True/False),...]]
+                data = [datetime.utcnow(),inputs+outputs+clocks]
+                dataPoints.append(data)
+                #print data
+                componentCount[1] = len(dataPoints[-1][1])
 
-
+        #Reset window if number of combonents is changed
         if(componentCount[0] != componentCount[1]):
             height = componentCount[1]*80+30
             componentCount[0] = componentCount[1]
-            #screen=pygame.display.set_mode((width,height),HWSURFACE|DOUBLEBUF|RESIZABLE)
+            screen=pygame.display.set_mode((width,height),HWSURFACE|DOUBLEBUF|RESIZABLE)
             dataPoints = [dataPoints[-1]]
 
+        #Draw lines & labels
         screen.fill(white)
 
         tempDataPoints = dataPoints + [[datetime.utcnow(),dataPoints[-1][1]]]
         for x in range(len(dataPoints[-1][1])):
             label = font.render(dataPoints[-1][1][x][0], True, black)
             screen.blit(label, (10, (80*x)+20 ))
-            
+
         for x in range(len(dataPoints)):
             timeStampDelta = (nowTime-tempDataPoints[x][0]).total_seconds()
             nextTimestampDelta = (nowTime-tempDataPoints[x+1][0]).total_seconds()
@@ -197,11 +212,16 @@ def LoadTimingWindow(mainProgram):
                 for i in range(len(tempDataPoints[x][1])):
                     value = tempDataPoints[x][1][i][1]
                     color = green if value else red
-                    lineHeight = 80*(i+1) if color is red else 80*(i+1)-30
-                    startPoint = timeStampDelta*(defaultWidth/timeOnScreen), lineHeight
-                    endPoint = nextTimestampDelta*(defaultWidth/timeOnScreen), lineHeight
-                    pygame.draw.line(screen, color , startPoint, endPoint ,10)
+                    linePos = 80*(i+1) if color is red else 80*(i+1)-30
+                    #startPoint = timeStampDelta*(defaultWidth/timeOnScreen), linePos
+                    #endPoint = nextTimestampDelta*(defaultWidth/timeOnScreen), linePos
+                    #pygame.draw.line(screen, color , startPoint, endPoint ,10)
 
+                    lineThickness = 10
+                    startPoint = timeStampDelta*(defaultWidth/timeOnScreen), linePos-(lineThickness/2)
+                    endPoint = nextTimestampDelta*(defaultWidth/timeOnScreen), linePos-(lineThickness/2)
+                    lineRect = Rect(startPoint,(endPoint[0]-startPoint[0],lineThickness))
+                    pygame.draw.rect(screen, color, lineRect)
 
         #pygame.time.wait(10)
         pygame.display.flip()
