@@ -209,10 +209,8 @@ def UpdateLights():
     #Run Logic Simulation (turn lights on/off)
     for light in loadedLights:
         TurnLight(light, Evaluate(light,loadedLines))
-    try:
+    if childProcesses:
         timingPipe.send([loadedSwitches,loadedClocks,loadedLights,datetime.utcnow()])
-    except:
-        pass
 
 def UpdateLines():
     #Run Logic Simulation (turn lines on/off)
@@ -417,10 +415,8 @@ def Main():
 
         #Check if component count has changes since last Loop
         if(len(loadedSwitches+loadedLights+loadedClocks) != totalInputOutputCount):
-            try:
+            if childProcesses:
                 timingPipe.send([loadedSwitches,loadedClocks,loadedLights,datetime.utcnow()])
-            except:
-                pass
             totalInputOutputCount = len(loadedSwitches+loadedLights+loadedClocks)
 
         #Start Drawing
@@ -463,6 +459,12 @@ def Main():
         #screen.blit(info1, (0, height-40))
         #screen.blit(info2, (0, height-40))
         #screen.blit(info3, (0, height-20))
+
+        for process in childProcesses:
+            if not process.is_alive():
+                print childProcesses
+                childProcesses.remove(process)
+                print childProcesses
 
         #Update Screen
         pygame.display.flip()

@@ -157,7 +157,7 @@ def LoadTimingWindow(mainProgram):
         playPauseButtonRect.midtop = width/2,0
 
         #Pause if window is dragging
-        if (datetime.utcnow()-nowTime).total_seconds() > 0.1:
+        if (datetime.utcnow()-nowTime).total_seconds() > 0.3:
             for dataPoint in dataPoints:
                 dataPoint[0] += (datetime.utcnow()-nowTime)
             nowTime = datetime.utcnow()
@@ -167,6 +167,7 @@ def LoadTimingWindow(mainProgram):
         #Handle window close & window resize events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                mainProgram.close()
                 sys.exit()
         if event.type == pygame.VIDEORESIZE:
             size = width,height = event.size
@@ -188,7 +189,7 @@ def LoadTimingWindow(mainProgram):
             #response = [loadedSwitches,loadedClocks,loadedLights,parentTimestamp]
             response = mainProgram.recv()
             timeSinceResponse = (nowTime - response[3]).total_seconds()
-            #print timeSinceResponse
+            print timeSinceResponse
 
             if abs(timeSinceResponse) < 0.01 or not dataPoints:
                 inputs = [("S"+str(switch[5]),switch[4]) for switch in response[0]]
