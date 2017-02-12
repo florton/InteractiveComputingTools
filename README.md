@@ -18,6 +18,10 @@ Currently there is no built version of the application. Once the Beta version is
 >python InteractiveLogic.py
 
 ###Buttons / Layout
+######Right clicking on anything deletes it.
+######Line tool is active when cursor is a diamond. Right click on white space to cancel.  
+
+
 ![JK-Flip-flop](Readme_Images/help.png)
 
 ###JK Flip Flop
@@ -26,9 +30,17 @@ Currently there is no built version of the application. Once the Beta version is
 ###Full Adder
 ![Full Adder](Readme_Images/adder.png)
 
+# Coming Soon (Alpha 1.1 WIP):
+
+## Truth Table Generator
+
+![TruthTable](Readme_Images/TruthTable.jpg)
+
+## Timing Diagram Generator
+
+![TimingDiagram](Readme_Images/TimingDiagram.jpg)
+
 ##Features To Be Added
-- Truth Table Generator
-- Timing Diagram Generator
 - Save/Load Circuit
 - Export as Image
 - Custom Re-Usable Components
