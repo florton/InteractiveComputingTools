@@ -5,11 +5,12 @@ from pygame.locals import *
 from gates import Evaluate
 from datetime import datetime
 
-global white,black, green, red
+global white,black, green, red, blue
 white = 255, 255, 255
 black = 0,0,0
 red = 255,0,0
 green = 0,255,0
+blue = 0,0,255
 
 def FlipSwitches(order,switches):
     for x in range(len(switches)):
@@ -222,6 +223,9 @@ def LoadTimingWindow(mainProgram):
             label = font.render(dataPoints[-1][1][x][0], True, black)
             screen.blit(label, (10, (80*x)+20 ))
 
+        previousRects = [None for x in range(len(dataPoints[-1][1]))]
+
+        #For each dataPoint recieved from the main program
         for x in range(len(dataPoints)):
             timeStampDelta = (nowTime-tempDataPoints[x][0]).total_seconds()
             nextTimestampDelta = (nowTime-tempDataPoints[x+1][0]).total_seconds()
@@ -229,19 +233,35 @@ def LoadTimingWindow(mainProgram):
                 startIndex+=1
                 continue
             else:
+                #For each input,clock, or output
                 for i in range(len(tempDataPoints[x][1])):
                     value = tempDataPoints[x][1][i][1]
                     color = green if value else red
                     linePos = 80*(i+1) if color is red else 80*(i+1)-30
-                    #startPoint = timeStampDelta*(defaultWidth/timeOnScreen), linePos
-                    #endPoint = nextTimestampDelta*(defaultWidth/timeOnScreen), linePos
-                    #pygame.draw.line(screen, color , startPoint, endPoint ,10)
 
+                    #Draw Green/Red Bars
                     lineThickness = 10
                     startPoint = timeStampDelta*(defaultWidth/timeOnScreen), linePos-(lineThickness/2)
                     endPoint = nextTimestampDelta*(defaultWidth/timeOnScreen), linePos-(lineThickness/2)
-                    lineRect = Rect(startPoint,(endPoint[0]-startPoint[0],lineThickness))
+                    lineRect = Rect((startPoint[0]+2,startPoint[1]),(endPoint[0]-startPoint[0],lineThickness))
                     pygame.draw.rect(screen, color, lineRect)
+
+                    #Draw Blue Transition Lines
+                    if previousRects[i]:
+                        #if transition is from low to high
+                        if value:
+                            lineColor = red
+                            lineStart = lineRect.bottomleft
+                            lineEnd = lineStart[0], previousRects[i].topright[1]
+                        else:
+                            lineColor = green
+                            lineStart = previousRects[i].bottomright[0]-1,previousRects[i].bottomright[1]
+                            lineEnd = lineStart[0] , lineRect.topleft[1]-0.5
+                        if abs(lineStart[1] - lineEnd[1]) >15:
+                            pygame.draw.line(screen, lineColor, lineStart, lineEnd, 1)
+
+                    previousRects[i] = lineRect
+
 
         #pygame.time.wait(10)
         pygame.display.flip()
