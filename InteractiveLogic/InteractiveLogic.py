@@ -3,9 +3,7 @@ from pygame.locals import *
 from gates import Evaluate
 from generator import GenerateTruthTable, TruthTableError, GenerateTimingDiagram
 from datetime import datetime
-import pickle
-from Tkinter import Tk
-import tkFileDialog
+from saveload import SaveGame, LoadGame
 
 # A gate is a list [image, rect, gate_name_string, [connections_on_input_anchors], on/off, id]
 def makeGate(name):
@@ -165,7 +163,7 @@ def Click(clickCoords):
 
         #Save/Load
         if saveButtonRect.collidepoint(mouseX,mouseY):
-            SaveGame()
+            SaveGame(loadedGates,loadedLines,loadedSwitches,loadedLights,loadedClocks)
 
         #Generate Truth Table & show in new window
         if truthTableButtonRect.collidepoint(mouseX,mouseY):
@@ -239,40 +237,6 @@ def UpdateClocks():
         screen.blit(clock[0],clock[1])
         clockID = font.render('C'+str(clock[5]), True, black)
         screen.blit(clockID, (clock[1].x+5, clock[1].y+30))
-
-def SaveGame():
-    saveData = []
-
-    saveData.append([x[1:] for x in loadedGates])
-    #saveData.append(loadedLines)
-    saveData.append([x[1:] for x in loadedSwitches])
-    saveData.append([x[1:] for x in loadedLights])
-    saveData.append([x[1:] for x in loadedClocks])
-    saveData.append(totalInputOutputCount)
-
-
-    Tk().withdraw()
-    filename = tkFileDialog.asksaveasfilename(**{'defaultextension':'.logic'})
-    with open(filename, "wb") as f:
-        pickle.dump(saveData, f)
-
-def LoadGame():
-    global loadedGates,loadedLines,loadedSwitches,loadedLights,loadedClocks
-    global totalInputOutputCount
-
-    Tk().withdraw()
-    filename = tkFileDialog.askopenfilename()
-
-    loadData = []
-    with open(filename, "rb") as f:
-        loadData = pickle.load(f)
-
-    loadedGates = loadData[0]
-    loadedLines = loadData[1]
-    loadedSwitches = loadData[2]
-    loadedLights = loadData[3]
-    loadedClocks = loadData[4]
-    totalInputOutputCount = loadData[5]
 
 def Main():
 
@@ -369,13 +333,13 @@ def Main():
         width,height = size
         gateSelectRect.midtop = (width/2,0)
 
-        saveButtonRect.midleft = (0, height/2 -225)
-        lineButtonRect.midleft = (0, height/2 -150)
-        switchButtonRect.midleft = (0, height/2 -75)
-        lightButtonRect.midleft = (0, height/2 +75)
+        saveButtonRect.midleft = (0, height/2 -180)
+        lineButtonRect.midleft = (0, height/2 -120)
+        switchButtonRect.midleft = (0, height/2 -60)
         clockButtonRect.midleft = (0, height/2)
-        truthTableButtonRect.midleft = (0, height/2 +150)
-        timingButtonRect.midleft = (0, height/2 +225)
+        lightButtonRect.midleft = (0, height/2 +60)
+        truthTableButtonRect.midleft = (0, height/2 +120)
+        timingButtonRect.midleft = (0, height/2 +180)
 
         #Get Input Events
         for event in pygame.event.get():
