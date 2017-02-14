@@ -246,7 +246,7 @@ def LoadTimingWindow(mainProgram):
                     lineRect = Rect((startPoint[0]+2,startPoint[1]),(endPoint[0]-startPoint[0],lineThickness))
                     pygame.draw.rect(screen, color, lineRect)
 
-                    #Draw Blue Transition Lines
+                    #Draw Red/Green Transition Lines
                     if previousRects[i]:
                         #if transition is from low to high
                         if value:

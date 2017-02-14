@@ -3,7 +3,9 @@ from pygame.locals import *
 from gates import Evaluate
 from generator import GenerateTruthTable, TruthTableError, GenerateTimingDiagram
 from datetime import datetime
-
+import pickle
+from Tkinter import Tk
+import tkFileDialog
 
 # A gate is a list [image, rect, gate_name_string, [connections_on_input_anchors], on/off, id]
 def makeGate(name):
@@ -95,7 +97,7 @@ def makeLine(mouseX,mouseY,target,drawingLine):
             #add current line to end target connections array
             target[3].append(loadedLines[-1])
             #print target
-        UpdateLines()            
+        UpdateLines()
         UpdateLights()
 
         return 3
@@ -157,9 +159,13 @@ def Click(clickCoords):
                 else:
                     switch[0] = switchOn
                     switch[4] = True
-                    
+
                 UpdateLines()
                 UpdateLights()
+
+        #Save/Load
+        if saveButtonRect.collidepoint(mouseX,mouseY):
+            SaveGame()
 
         #Generate Truth Table & show in new window
         if truthTableButtonRect.collidepoint(mouseX,mouseY):
@@ -228,11 +234,45 @@ def UpdateClocks():
         if deltaTime >= clock[6]:
             clock[4] = not clock[4]
             clock[7] = newTime
-            UpdateLines()            
+            UpdateLines()
             UpdateLights()
         screen.blit(clock[0],clock[1])
         clockID = font.render('C'+str(clock[5]), True, black)
         screen.blit(clockID, (clock[1].x+5, clock[1].y+30))
+
+def SaveGame():
+    saveData = []
+
+    saveData.append([x[1:] for x in loadedGates])
+    #saveData.append(loadedLines)
+    saveData.append([x[1:] for x in loadedSwitches])
+    saveData.append([x[1:] for x in loadedLights])
+    saveData.append([x[1:] for x in loadedClocks])
+    saveData.append(totalInputOutputCount)
+
+
+    Tk().withdraw()
+    filename = tkFileDialog.asksaveasfilename(**{'defaultextension':'.logic'})
+    with open(filename, "wb") as f:
+        pickle.dump(saveData, f)
+
+def LoadGame():
+    global loadedGates,loadedLines,loadedSwitches,loadedLights,loadedClocks
+    global totalInputOutputCount
+
+    Tk().withdraw()
+    filename = tkFileDialog.askopenfilename()
+
+    loadData = []
+    with open(filename, "rb") as f:
+        loadData = pickle.load(f)
+
+    loadedGates = loadData[0]
+    loadedLines = loadData[1]
+    loadedSwitches = loadData[2]
+    loadedLights = loadData[3]
+    loadedClocks = loadData[4]
+    totalInputOutputCount = loadData[5]
 
 def Main():
 
@@ -242,7 +282,7 @@ def Main():
 
     global size, width, height, screen
 
-    size = width, height = 800, 600
+    size = width, height = 1000, 800
     screen=pygame.display.set_mode(size,HWSURFACE|DOUBLEBUF|RESIZABLE)
 
     global font, black
@@ -269,6 +309,8 @@ def Main():
     loadedLights = []
     loadedClocks = []
 
+    global totalInputOutputCount
+
     totalInputOutputCount = 0
 
     timestamp = datetime.utcnow()
@@ -292,13 +334,14 @@ def Main():
     lightOn = pygame.image.load("gatePics\LIGHTON.png")
     clockComponent = pygame.image.load("gatePics\CLOCK.png")
 
-    global gateSelect, selectRect , lineButton , lineButtonRect
+    global gateSelect, gateSelectRect , lineButton , lineButtonRect
     global switchButton, switchButtonRect , lightButton, lightButtonRect
     global clockButton, clockButtonRect, truthTableButton, truthTableButtonRect
     global timingButton, timingButtonRect
+    global saveButton, saveButtonRect #, loadButton, loadButtonrect
 
     gateSelect = pygame.image.load("gatePics\GATES.png")
-    selectRect = gateSelect.get_rect()
+    gateSelectRect = gateSelect.get_rect()
 
     lineButton = pygame.image.load("gatePics\LINE.png")
     lineButtonRect = lineButton.get_rect()
@@ -318,11 +361,15 @@ def Main():
     timingButton = pygame.image.load("gatePics\TIMINGBUTTON.png")
     timingButtonRect = timingButton.get_rect()
 
+    saveButton = pygame.image.load("gatePics\SAVEBUTTON.png")
+    saveButtonRect = saveButton.get_rect()
 
     #Main Loop
     while True:
         width,height = size
-        selectRect.midtop = (width/2,0)
+        gateSelectRect.midtop = (width/2,0)
+
+        saveButtonRect.midleft = (0, height/2 -225)
         lineButtonRect.midleft = (0, height/2 -150)
         switchButtonRect.midleft = (0, height/2 -75)
         lightButtonRect.midleft = (0, height/2 +75)
@@ -371,7 +418,7 @@ def Main():
                         clickOffset = mouseX-target[1].left , mouseY-target[1].top
                         draggingObject = target
         if mouseKey[0] == 0 and draggingObject:
-            if draggingObject and selectRect.collidepoint(draggingObject[1].center):
+            if draggingObject and gateSelectRect.collidepoint(draggingObject[1].center):
                 Delete(draggingObject)
             draggingObject = None
 
@@ -396,8 +443,8 @@ def Main():
         #Hold Left Click
         if mouseKey[0] == 1 and not draggingObject and not drawingLine:
             #Spawn new gates
-            if selectRect.collidepoint(mouseX,mouseY):
-                select = (mouseX-selectRect.left)/(selectRect.width/7)
+            if gateSelectRect.collidepoint(mouseX,mouseY):
+                select = (mouseX-gateSelectRect.left)/(gateSelectRect.width/7)
                 select = int(math.floor(select))
                 newGate = makeGate(gateNames[select])
                 clickOffset = newGate[1].width/2,newGate[1].height/2
@@ -426,13 +473,14 @@ def Main():
         #Start Drawing
         screen.fill(white)
         #draw selection bar & buttons
-        screen.blit(gateSelect,selectRect)
+        screen.blit(gateSelect,gateSelectRect)
         screen.blit(lineButton,lineButtonRect)
         screen.blit(switchButton,switchButtonRect)
         screen.blit(lightButton,lightButtonRect)
         screen.blit(clockButton,clockButtonRect)
         screen.blit(truthTableButton,truthTableButtonRect)
         screen.blit(timingButton,timingButtonRect)
+        screen.blit(saveButton,saveButtonRect)
         #draw all gates, switches & Lines
         for target in loadedGates+loadedSwitches+loadedLights+loadedClocks:
             screen.blit(target[0], target[1])
