@@ -7,7 +7,7 @@ from saveload import SaveGame, LoadGame
 
 # A gate is a list [image, rect, gate_name_string, [connections_on_input_anchors], on/off, id]
 def makeGate(name):
-    gate = pygame.image.load("gatePics\\" + name + ".png")
+    gate = gatePics[gateNames.index(name)]
     gateRect = gate.get_rect()
     gateRect.center = mouseX,mouseY
     id = 0 if not loadedGates else loadedGates[-1][5]+1
@@ -48,7 +48,6 @@ def makeLine(mouseX,mouseY,target,drawingLine):
 
     # if drawingLine == 1 -> set line start, if == 2 -> set line end,
     # if == 3 -> set drawingLine to 1 on next mouseup
-
     #check if switch
     if target[2] == 'SWITCH':
         anchor = 4
@@ -147,6 +146,7 @@ def TurnLight(light, bool):
         light[4] = False
 
 def Click(clickCoords):
+    global timingPipe,loadedGates,loadedLines,loadedSwitches,loadedLights,loadedClocks
     if not drawingLine:
         #Flip switch if clicked on
         for switch in loadedSwitches:
@@ -157,13 +157,26 @@ def Click(clickCoords):
                 else:
                     switch[0] = switchOn
                     switch[4] = True
-
                 UpdateLines()
                 UpdateLights()
 
-        #Save/Load
+        #Save current circuit to file
         if saveButtonRect.collidepoint(mouseX,mouseY):
             SaveGame(loadedGates,loadedLines,loadedSwitches,loadedLights,loadedClocks)
+
+        #Load previous circuit from file
+        if loadButtonrect.collidepoint(mouseX,mouseY):
+            result = LoadGame(switchOn,switchOff,lightOn,lightOff,clockComponent,gatePics)
+            if result:
+                loadedGates = result[0]
+                loadedLines = result[1]
+                loadedSwitches = result[2]
+                loadedLights = result[3]
+                loadedClocks = result[4]
+
+                for process in childProcesses:
+                    process.terminate()
+                timingPipe = None
 
         #Generate Truth Table & show in new window
         if truthTableButtonRect.collidepoint(mouseX,mouseY):
@@ -182,7 +195,7 @@ def Click(clickCoords):
                 process.terminate()
             result = GenerateTimingDiagram()
             childProcesses.append(result[0])
-            global timingPipe
+
             timingPipe = result[1]
             timingPipe.send([loadedSwitches,loadedClocks,loadedLights,datetime.utcnow()])
 
@@ -239,7 +252,6 @@ def UpdateClocks():
         screen.blit(clockID, (clock[1].x+5, clock[1].y+30))
 
 def Main():
-
     #Initialize variables
     pygame.init()
     pygame.display.set_caption("Interactive Logic")
@@ -284,9 +296,10 @@ def Main():
     childProcesses = []
     timingPipe = None
 
-    global gatenames, draggingObject, drawingLine
+    global gateNames, gatePics, draggingObject, drawingLine
 
     gateNames = ['AND','OR','NOT','NOR','NAND','XOR','XNOR']
+    gatePics = [pygame.image.load("gatePics\\" + name + ".png") for name in gateNames]
     draggingObject = None
     drawingLine = False
 
@@ -302,7 +315,7 @@ def Main():
     global switchButton, switchButtonRect , lightButton, lightButtonRect
     global clockButton, clockButtonRect, truthTableButton, truthTableButtonRect
     global timingButton, timingButtonRect
-    global saveButton, saveButtonRect #, loadButton, loadButtonrect
+    global saveButton, saveButtonRect, loadButton, loadButtonrect
 
     gateSelect = pygame.image.load("gatePics\GATES.png")
     gateSelectRect = gateSelect.get_rect()
@@ -328,12 +341,17 @@ def Main():
     saveButton = pygame.image.load("gatePics\SAVEBUTTON.png")
     saveButtonRect = saveButton.get_rect()
 
+    loadButton = pygame.image.load("gatePics\LOADBUTTON.png")
+    loadButtonrect = loadButton.get_rect()
+
     #Main Loop
     while True:
         width,height = size
         gateSelectRect.midtop = (width/2,0)
 
-        saveButtonRect.midleft = (0, height/2 -180)
+        saveButtonRect.midleft = (0, height/2 -260)
+        loadButtonrect.midleft = (0, height/2 -200)
+
         lineButtonRect.midleft = (0, height/2 -120)
         switchButtonRect.midleft = (0, height/2 -60)
         clockButtonRect.midleft = (0, height/2)
@@ -445,6 +463,7 @@ def Main():
         screen.blit(truthTableButton,truthTableButtonRect)
         screen.blit(timingButton,timingButtonRect)
         screen.blit(saveButton,saveButtonRect)
+        screen.blit(loadButton,loadButtonrect)
         #draw all gates, switches & Lines
         for target in loadedGates+loadedSwitches+loadedLights+loadedClocks:
             screen.blit(target[0], target[1])
