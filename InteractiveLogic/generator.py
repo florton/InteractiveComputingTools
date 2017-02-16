@@ -40,7 +40,7 @@ def LoadErrorWindow(error):
         screen.blit(errorLine, (0, 10))
 
         pygame.display.flip()
-        #pygame.time.wait(100)
+        pygame.time.wait(100)
 
 def LoadTruthWindow(inputs, outputs, ids):
     pygame.init()
@@ -85,7 +85,7 @@ def LoadTruthWindow(inputs, outputs, ids):
             screen.blit(line, (0, 50*x+60))
 
         pygame.display.flip()
-        #pygame.time.wait(100)
+        pygame.time.wait(100)
 
 
 def GenerateTruthTable(loadedLights,loadedSwitches,loadedLines):
@@ -263,5 +263,5 @@ def LoadTimingWindow(mainProgram):
                     previousRects[i] = lineRect
 
 
-        #pygame.time.wait(10)
+        pygame.time.wait(1)
         pygame.display.flip()

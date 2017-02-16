@@ -7,7 +7,6 @@ def SaveGame(loadedGates,loadedLines,loadedSwitches,loadedLights,loadedClocks):
     gatesData = []
     for gate in loadedGates:
         gatesData.append( [None,gate[1],gate[2],[],gate[4],gate[5]])
-        #gatesData.append([(x[2], x[5]) if x[2] != "LINE" else (x[0][1][2], x[0][1][5]) for x in gate[3]])
 
     #lineData = [[start_target_anchor, (start_target_name, id) , start_coords],
     #[end_target_anchor, (end_target_name, id), end_coords],"LINE",id,on/off]
@@ -24,7 +23,6 @@ def SaveGame(loadedGates,loadedLines,loadedSwitches,loadedLights,loadedClocks):
     lightsData = []
     for light in loadedLights:
         lightsData.append([None,light[1],light[2],[],light[4],light[5]])
-        #lightsData.append([(x[2], x[5]) if x[2] != "LINE" else (x[0][1][2], x[0][1][5]) for x in light[3]])
 
     #clocksData = [None, rect, "CLOCK", [dummy_array], on/off, id, freq, timestamp]
     clocksData = [[None]+clock[1:] for clock in loadedClocks]
@@ -75,8 +73,6 @@ def LoadGame(switchOn,switchOff,lightOn,lightOff,clockComponent,gatePics):
         #clock
         clocksData = [[clockComponent]+clock[1:] for clock in loadData[4]]
         #gates
-        print loadData
-
         gatesData = [[gatePics[gateNames.index(gate[2])]] +gate[1:] for gate in loadData[0]]
         #lights
         lightsData = [[lightOn if light[4] else lightOff]+light[1:] for light in loadData[3]]

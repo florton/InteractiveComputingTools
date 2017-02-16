@@ -502,7 +502,7 @@ def Main():
 
         #Update Screen
         pygame.display.flip()
-        #pygame.time.wait(10)
+        #pygame.time.wait(5)
 
 if __name__ == '__main__':
     Main()
