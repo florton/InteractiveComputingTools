@@ -360,8 +360,9 @@ def Main():
         switchButtonRect.midleft = (0, height/2 -60)
         clockButtonRect.midleft = (0, height/2)
         lightButtonRect.midleft = (0, height/2 +60)
-        truthTableButtonRect.midleft = (0, height/2 +120)
-        timingButtonRect.midleft = (0, height/2 +180)
+
+        truthTableButtonRect.midleft = (0, height/2 +140)
+        timingButtonRect.midleft = (0, height/2 +200)
 
         #Get Input Events
         for event in pygame.event.get():
