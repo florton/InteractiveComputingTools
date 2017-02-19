@@ -1,6 +1,6 @@
 #Interactive Logic
 
-##### Ver: Alpha 1.0
+##### Ver: Alpha 1.1
 ##### Created by Flanders Lorton
 
 ###Interactive Logic is a python app intended to create logic circuits
@@ -9,7 +9,11 @@
 ##Installing and running
 Currently there is no built version of the application. Once the Beta version is complete there will be a build for PC,Mac&Linux
 
-###Steps for installation:
+###Windows 64 Bit executable now added for version Alpha 1.1!
+#####Just download and run!
+
+
+###Steps for installation from source code:
 1. Install Python 2.7 https://www.python.org/downloads/release/python-2713/
 2. Install Pygame http://www.pygame.org/download.shtml
 3. Download InteractiveLogicAlpha1_0.zip
@@ -18,29 +22,20 @@ Currently there is no built version of the application. Once the Beta version is
 >python InteractiveLogic.py
 
 ###Buttons / Layout
-######Right clicking on anything deletes it.
 ######Line tool is active when cursor is a diamond. Right click on white space to cancel.  
 
 
-![JK-Flip-flop](Readme_Images/help.png)
+![Instructions](Readme_Images/help.png)
 
-###JK Flip Flop
-![JK-Flip-flop](Readme_Images/flipflop.png)
+##Known bugs
+- Dragging either window will disrupt clock output on timing diagrams
+- Pausing timing diagram will not stop clock cycling
+- Some large component loops may be evaluated incorrectly (Speculation)
 
-###Full Adder
-![Full Adder](Readme_Images/adder.png)
-
-# Coming Soon (Alpha 1.1 WIP):
-
-## Truth Table Generator
-
-![TruthTable](Readme_Images/TruthTable.jpg)
-
-## Timing Diagram Generator
-
-![TimingDiagram](Readme_Images/TimingDiagram.jpg)
+Please send me a message if you find additional bugs
 
 ##Features To Be Added
-- Save/Load Circuit
+- Clear button and timescale on timing diagram
+- Scroll bar for large truth tables
 - Export as Image
 - Custom Re-Usable Components

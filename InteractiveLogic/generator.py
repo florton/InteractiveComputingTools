@@ -35,7 +35,7 @@ def LoadErrorWindow(error):
             if event.type == pygame.QUIT:
                 sys.exit()
 
-        font=pygame.font.Font(None,30)
+        font=pygame.font.Font("freesansbold.ttf", 20)
         errorLine = font.render(error, True, black)
         screen.blit(errorLine, (0, 10))
 
@@ -147,10 +147,10 @@ def LoadTimingWindow(mainProgram):
     isPaused = False
     hasClicked = False
 
-    playButton = pygame.image.load("gatePics\Timing\PLAY.png")
+    playButton = pygame.image.load("gatePics\PLAY.png")
     playPauseButtonRect = playButton.get_rect()
 
-    pauseButton = pygame.image.load("gatePics\Timing\PAUSE.png")
+    pauseButton = pygame.image.load("gatePics\PAUSE.png")
 
     while True:
         size = width,height

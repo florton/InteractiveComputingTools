@@ -5,6 +5,10 @@ from generator import GenerateTruthTable, TruthTableError, GenerateTimingDiagram
 from datetime import datetime
 from saveload import SaveGame, LoadGame
 
+#Extra code for PyInstaller building
+if getattr(sys, 'frozen', False):
+    os.chdir(sys._MEIPASS)
+
 # A gate is a list [image, rect, gate_name_string, [connections_on_input_anchors], on/off, id]
 def makeGate(name):
     gate = gatePics[gateNames.index(name)]
@@ -263,7 +267,7 @@ def Main():
 
     global font, black
 
-    font=pygame.font.Font(None,30)
+    font=pygame.font.Font("gatePics/freesansbold.ttf", 20)
     white = 255, 255, 255
     black = 0,0,0
     red = 255,0,0
