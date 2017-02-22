@@ -148,14 +148,17 @@ def LoadTimingWindow(mainProgram):
     hasClicked = False
 
     playButton = pygame.image.load("gatePics\PLAY.png")
+    pauseButton = pygame.image.load("gatePics\PAUSE.png")
     playPauseButtonRect = playButton.get_rect()
 
-    pauseButton = pygame.image.load("gatePics\PAUSE.png")
+    clearButton = pygame.image.load("gatePics\CLEAR.png")
+    clearButtonRect = clearButton.get_rect()
 
     while True:
         size = width,height
 
-        playPauseButtonRect.midtop = width/2,0
+        playPauseButtonRect.midtop = width/2 - 15, 0
+        clearButtonRect.midtop = width/2 + 15, 0
 
         #Pause if window is dragging
         if (datetime.utcnow()-nowTime).total_seconds() > 0.1:
@@ -176,8 +179,12 @@ def LoadTimingWindow(mainProgram):
         if event.type == pygame.MOUSEBUTTONDOWN:
             #Left click
             if event.button == 1:
-                if playPauseButtonRect.collidepoint(event.pos) and not hasClicked:
-                    isPaused = not isPaused
+                if not hasClicked:
+                    if playPauseButtonRect.collidepoint(event.pos):
+                        isPaused = not isPaused
+                    if clearButtonRect.collidepoint(event.pos):
+                        dataPoints = [dataPoints[-1]]
+                        dataPoints[0][0] = datetime.utcnow()
                 hasClicked = True
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1:
@@ -217,6 +224,8 @@ def LoadTimingWindow(mainProgram):
             screen.blit(playButton,playPauseButtonRect)
         else:
             screen.blit(pauseButton,playPauseButtonRect)
+
+        screen.blit(clearButton, clearButtonRect)
 
         tempDataPoints = dataPoints + [[datetime.utcnow(),dataPoints[-1][1]]]
         for x in range(len(dataPoints[-1][1])):
@@ -263,5 +272,5 @@ def LoadTimingWindow(mainProgram):
                     previousRects[i] = lineRect
 
 
-        pygame.time.wait(1)
+        #pygame.time.wait(1)
         pygame.display.flip()

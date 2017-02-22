@@ -503,7 +503,6 @@ def Main():
         for process in childProcesses:
             if not process.is_alive():
                 childProcesses.remove(process)
-                timingPipe = None
 
         #Update Screen
         pygame.display.flip()
