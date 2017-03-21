@@ -45,8 +45,10 @@ def LoadErrorWindow(error):
 def LoadTruthWindow(inputs, outputs, ids):
     pygame.init()
     pygame.display.set_caption("Truth Table")
-    size = width, height = len(inputs[0])*28+len(outputs[0])*28 +55, len(inputs)*50+50
-    screen=pygame.display.set_mode(size)
+    halfWidth = len(inputs[0])*28
+    width = halfWidth+len(outputs[0])*28 +85
+    height = len(inputs)*30+40 if len(inputs)<9 else 520
+    screen=pygame.display.set_mode((width,height))
 
     while True:
         screen.fill(white)
@@ -61,28 +63,36 @@ def LoadTruthWindow(inputs, outputs, ids):
         firstLine = "  "
         for input in ids[0]:
             firstLine += "S"+str(input)+" "
-        firstLine += " | "
+        firstLine += "   "
         for output in ids[1]:
             firstLine += "L"+str(output)+ " "
 
         first = font.render(firstLine, True, black)
-        screen.blit(first, (0, 20))
+        screen.blit(first, (0, 10))
+        #second = font.render("".ljust(len(firstLine),'_'), True, black)
+        #screen.blit(second, (0, 30))
 
-        second = font.render("".ljust(len(firstLine),'_'), True, black)
-        screen.blit(second, (0, 30))
         #Draw each I/O line
-
         for x in range(len(inputs)):
+            currentHeight = 30*x+45
+            # Alternating background bars
+            backgroundColor = (200, 200, 200) if x % 2 == 0 else white
+            pygame.draw.rect(screen, backgroundColor, (0,currentHeight-5,width,30))
+
             outputString = "   "
             for y in inputs[x]:
                 outputString += y + "   "
-            outputString+= "|  "
+            outputString+= "   "
             for z in outputs[x]:
                 outputString += str(z) + "   "
 
             line = font.render(outputString, True, black)
+            screen.blit(line, (0, currentHeight))
 
-            screen.blit(line, (0, 50*x+60))
+        #Draw lines & scroll bar
+        pygame.draw.line(screen, black, (0, 40), (width,40), 4)
+        pygame.draw.line(screen, black, (halfWidth+28, 0) ,(halfWidth+28, height) ,4)
+
 
         pygame.display.flip()
         pygame.time.wait(100)
