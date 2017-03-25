@@ -46,7 +46,7 @@ def LoadTruthWindow(inputs, outputs, ids):
     pygame.init()
     pygame.display.set_caption("Truth Table")
     halfWidth = len(inputs[0])*28
-    width = halfWidth+len(outputs[0])*28 +85
+    width = halfWidth+len(outputs[0])*28 +45
     height = len(inputs)*30+40 if len(inputs)<9 else 520
     screen=pygame.display.set_mode((width,height))
 
