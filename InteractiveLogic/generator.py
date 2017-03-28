@@ -45,10 +45,18 @@ def LoadErrorWindow(error):
 def LoadTruthWindow(inputs, outputs, ids):
     pygame.init()
     pygame.display.set_caption("Truth Table")
+
     halfWidth = len(inputs[0])*28
-    width = halfWidth+len(outputs[0])*28 +45
+    width = halfWidth+len(outputs[0])*28 +65
     height = len(inputs)*30+40 if len(inputs)<9 else 520
     screen=pygame.display.set_mode((width,height))
+    font=pygame.font.Font(None,30)
+
+    scrollHeight = 0
+    mouseDown = False
+    mouseX,mouseY = 0,0
+
+    scrollBarRect = Rect(width-20, 0, 20, height/(len(inputs)/9 if len(inputs)/9 != 0 else 1))
 
     while True:
         screen.fill(white)
@@ -56,25 +64,16 @@ def LoadTruthWindow(inputs, outputs, ids):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
-
-        font=pygame.font.Font(None,30)
-
-        #Draw I/O Labels
-        firstLine = "  "
-        for input in ids[0]:
-            firstLine += "S"+str(input)+" "
-        firstLine += "   "
-        for output in ids[1]:
-            firstLine += "L"+str(output)+ " "
-
-        first = font.render(firstLine, True, black)
-        screen.blit(first, (0, 10))
-        #second = font.render("".ljust(len(firstLine),'_'), True, black)
-        #screen.blit(second, (0, 30))
+            if event.type == pygame.MOUSEBUTTONDOWN and scrollBarRect.collidepoint(mouseX,mouseY):
+                mouseDown = True
+            if event.type == pygame.MOUSEBUTTONUP:
+                mouseDown = False
+            if event.type == pygame.MOUSEMOTION:
+                mouseX,mouseY = event.pos
 
         #Draw each I/O line
         for x in range(len(inputs)):
-            currentHeight = 30*x+45
+            currentHeight = 30*x+45 - scrollHeight
             # Alternating background bars
             backgroundColor = (200, 200, 200) if x % 2 == 0 else white
             pygame.draw.rect(screen, backgroundColor, (0,currentHeight-5,width,30))
@@ -89,13 +88,33 @@ def LoadTruthWindow(inputs, outputs, ids):
             line = font.render(outputString, True, black)
             screen.blit(line, (0, currentHeight))
 
+        #Draw I/O Labels
+        screen.fill(white, Rect(0, 0, width, 40) )
+        firstLine = "  "
+        for input in ids[0]:
+            firstLine += "S"+str(input)+" "
+        firstLine += "   "
+        for output in ids[1]:
+            firstLine += "L"+str(output)+ " "
+
+        first = font.render(firstLine, True, black)
+        screen.blit(first, (0, 10))
+        #second = font.render("".ljust(len(firstLine),'_'), True, black)
+        #screen.blit(second, (0, 30))
+
         #Draw lines & scroll bar
         pygame.draw.line(screen, black, (0, 40), (width,40), 4)
         pygame.draw.line(screen, black, (halfWidth+28, 0) ,(halfWidth+28, height) ,4)
 
+        pygame.draw.rect(screen, (100, 100, 100), Rect(width-20, 0, 20, height))
 
+        pygame.draw.rect(screen, (60, 60, 60), scrollBarRect)
+
+        if mouseDown and mouseY-(scrollBarRect.height/2)>-5 and mouseY+(scrollBarRect.height/2)<height+10:
+            scrollBarRect.centery = mouseY
+            scrollHeight = (float(scrollBarRect.top)/float(height)) * (len(inputs)*30)
         pygame.display.flip()
-        pygame.time.wait(100)
+        #pygame.time.wait(100)
 
 
 def GenerateTruthTable(loadedLights,loadedSwitches,loadedLines):
