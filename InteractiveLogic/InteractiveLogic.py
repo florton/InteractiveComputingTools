@@ -98,7 +98,7 @@ def makeLine(mouseX,mouseY,target,drawingLine):
             #add current line to end target connections array
             target[3].append(loadedLines[-1])
             #print target
-        UpdateLines()
+        UpdateLogic()
 
         return 3
     return 2
@@ -136,7 +136,7 @@ def DeleteLine(line):
     except:
         pass
     loadedLines.remove(line)
-    UpdateLines()
+    UpdateLogic()
 
 
 def TurnLight(light, bool):
@@ -159,7 +159,7 @@ def Click(clickCoords):
                 else:
                     switch[0] = switchOn
                     switch[4] = True
-                UpdateLines()
+                UpdateLogic()
 
         #Save current circuit to file
         if saveButtonRect.collidepoint(mouseX,mouseY):
@@ -230,28 +230,17 @@ def PositionLines():
         line[0][2] = newCoords[0]
         line[1][2] = newCoords[1]
 
-# def UpdateLights():
-#     #Run Logic Simulation (turn lights on/off)
-#     for light in loadedLights:
-#         TurnLight(light, Evaluate(light,loadedLines))
-
-
-def UpdateLines():
-    #Run Logic Simulation (turn lines on/off)
+def UpdateLogic():
+    #Run Logic Simulation
     currentInputsOutputs = {}
-
-    for component in loadedGates+loadedLines+loadedClocks:
+    for component in loadedGates+loadedLines+loadedClocks+loadedSwitches+loadedLights:
         component[4] = Evaluate(component)
-    for component in loadedSwitches+loadedLights:
-        component[4] = Evaluate(component)
-        currentInputsOutputs[component[2]+str(component[5])] = component[4]
+        if component[2] in ["SWITCH","LIGHT","CLOCK"]:
+            currentInputsOutputs[component[2]+str(component[5])] = component[4]
     for light in loadedLights:
         TurnLight(light, light[4])
 
-    # print previousInputsOutputs,currentInputsOutputs
-
     if childProcesses and timingPipe and previousInputsOutputs != currentInputsOutputs:
-        print datetime.utcnow()
         timingPipe.send([loadedSwitches,loadedClocks,loadedLights,datetime.utcnow()])
     return currentInputsOutputs
 
@@ -262,7 +251,7 @@ def UpdateClocks():
         if deltaTime >= clock[6]:
             clock[4] = not clock[4]
             clock[7] = newTime
-            UpdateLines()
+            UpdateLogic()
         screen.blit(clock[0],clock[1])
         clockID = font.render('C'+str(clock[5]), True, black)
         screen.blit(clockID, (clock[1].x+5, clock[1].y+30))
@@ -302,10 +291,6 @@ def Main():
     loadedClocks = []
 
     previousInputsOutputs = {}
-
-    # global totalInputOutputCount
-    #
-    # totalInputOutputCount = 0
 
     timestamp = datetime.utcnow()
 
@@ -465,10 +450,6 @@ def Main():
             if clockButtonRect.collidepoint(mouseX,mouseY):
                 loadedClocks.append(makeClock())
 
-        #Check if component count has changes since last Loop
-        # if(len(loadedSwitches+loadedLights+loadedClocks) != totalInputOutputCount):
-            #totalInputOutputCount = len(loadedSwitches+loadedLights+loadedClocks)
-
         #Start Drawing
         screen.fill(white)
         #draw selection bar & buttons
@@ -504,21 +485,13 @@ def Main():
         if loadedClocks:
             UpdateClocks()
 
-        #draw text
-        #info1 = font.render("MousePos: "+str(mouseX) + ", "+str(mouseY), False, black)
-        #info2 = font.render(str(size)+', ' +  str(width) + ', ' + str(height), False, black)
-        #info3 = font.render("MouseKey:" + str(mouseKey), False, black)
-        #screen.blit(info1, (0, height-40))
-        #screen.blit(info2, (0, height-40))
-        #screen.blit(info3, (0, height-20))
-
         for process in childProcesses:
             if not process.is_alive():
                 childProcesses.remove(process)
                 timingPipe = None
 
         #Update Screen
-        previousInputsOutputs = UpdateLines()
+        previousInputsOutputs = UpdateLogic()
         pygame.display.flip()
         pygame.time.wait(1)
 
