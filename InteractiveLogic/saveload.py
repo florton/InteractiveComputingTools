@@ -1,6 +1,7 @@
 from Tkinter import Tk
 import tkFileDialog
 import pickle
+import pygame
 
 def SaveGame(loadedGates,loadedLines,loadedSwitches,loadedLights,loadedClocks):
     #gateData =  [None, rect, gate_name_string, [(input_connection_name, id),...], on/off, id]

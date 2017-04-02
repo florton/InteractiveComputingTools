@@ -2,7 +2,7 @@ import sys, pygame, math
 import subprocess
 from multiprocessing import Process, Pipe
 from pygame.locals import *
-from gates import Evaluate
+from gates import Evaluate, BuildTree
 from datetime import datetime
 
 global white,black, green, red, blue
@@ -26,7 +26,7 @@ def LoadErrorWindow(error):
     pygame.init()
     pygame.display.set_caption("Error")
 
-    size = width, height = len(error*10) , 50
+    size = width, height = len(error*10)+20 , 50
     screen=pygame.display.set_mode(size)
 
     while True:
@@ -136,7 +136,7 @@ def GenerateTruthTable(loadedLights,loadedSwitches,loadedLines):
         loadedSwitches = FlipSwitches(y,loadedSwitches)
         inputs.append(list(str(y)))
         for light in loadedLights:
-            result = Evaluate(light,loadedLines,True)
+            result = BuildTree(light,loadedLines)
             if result is None:
                 return TruthTableError("Loop detected, cannot generate truth table");
             outputs[x].append(int(result))

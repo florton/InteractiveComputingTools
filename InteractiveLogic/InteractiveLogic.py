@@ -99,7 +99,6 @@ def makeLine(mouseX,mouseY,target,drawingLine):
             target[3].append(loadedLines[-1])
             #print target
         UpdateLines()
-        UpdateLights()
 
         return 3
     return 2
@@ -138,7 +137,6 @@ def DeleteLine(line):
         pass
     loadedLines.remove(line)
     UpdateLines()
-    UpdateLights()
 
 
 def TurnLight(light, bool):
@@ -162,7 +160,6 @@ def Click(clickCoords):
                     switch[0] = switchOn
                     switch[4] = True
                 UpdateLines()
-                UpdateLights()
 
         #Save current circuit to file
         if saveButtonRect.collidepoint(mouseX,mouseY):
@@ -170,17 +167,20 @@ def Click(clickCoords):
 
         #Load previous circuit from file
         if loadButtonrect.collidepoint(mouseX,mouseY):
-            result = LoadGame(switchOn,switchOff,lightOn,lightOff,clockComponent,gatePics)
-            if result:
-                loadedGates = result[0]
-                loadedLines = result[1]
-                loadedSwitches = result[2]
-                loadedLights = result[3]
-                loadedClocks = result[4]
+            try:
+                result = LoadGame(switchOn,switchOff,lightOn,lightOff,clockComponent,gatePics)
+                if result:
+                    loadedGates = result[0]
+                    loadedLines = result[1]
+                    loadedSwitches = result[2]
+                    loadedLights = result[3]
+                    loadedClocks = result[4]
 
-                for process in childProcesses:
-                    process.terminate()
-                timingPipe = None
+                    for process in childProcesses:
+                        process.terminate()
+                    timingPipe = None
+            except:
+                childProcesses.append(TruthTableError("Save data could not be loaded, may be corrupted"))
 
         #Generate Truth Table & show in new window
         if truthTableButtonRect.collidepoint(mouseX,mouseY):
@@ -230,17 +230,30 @@ def PositionLines():
         line[0][2] = newCoords[0]
         line[1][2] = newCoords[1]
 
-def UpdateLights():
-    #Run Logic Simulation (turn lights on/off)
-    for light in loadedLights:
-        TurnLight(light, Evaluate(light,loadedLines))
-    if childProcesses and timingPipe:
-        timingPipe.send([loadedSwitches,loadedClocks,loadedLights,datetime.utcnow()])
+# def UpdateLights():
+#     #Run Logic Simulation (turn lights on/off)
+#     for light in loadedLights:
+#         TurnLight(light, Evaluate(light,loadedLines))
+
 
 def UpdateLines():
     #Run Logic Simulation (turn lines on/off)
-    for line in loadedLines:
-        line[4] = Evaluate(line,loadedLines)
+    currentInputsOutputs = {}
+
+    for component in loadedGates+loadedLines+loadedClocks:
+        component[4] = Evaluate(component)
+    for component in loadedSwitches+loadedLights:
+        component[4] = Evaluate(component)
+        currentInputsOutputs[component[2]+str(component[5])] = component[4]
+    for light in loadedLights:
+        TurnLight(light, light[4])
+
+    # print previousInputsOutputs,currentInputsOutputs
+
+    if childProcesses and timingPipe and previousInputsOutputs != currentInputsOutputs:
+        print datetime.utcnow()
+        timingPipe.send([loadedSwitches,loadedClocks,loadedLights,datetime.utcnow()])
+    return currentInputsOutputs
 
 def UpdateClocks():
     newTime = datetime.utcnow()
@@ -250,7 +263,6 @@ def UpdateClocks():
             clock[4] = not clock[4]
             clock[7] = newTime
             UpdateLines()
-            UpdateLights()
         screen.blit(clock[0],clock[1])
         clockID = font.render('C'+str(clock[5]), True, black)
         screen.blit(clockID, (clock[1].x+5, clock[1].y+30))
@@ -281,7 +293,7 @@ def Main():
     mouseX,mouseY = 0,0
     mouseKey = 0
 
-    global loadedGates,loadedLights,loadedLines,loadedSwitches,loadedClocks
+    global loadedGates,loadedLights,loadedLines,loadedSwitches,loadedClocks,previousInputsOutputs
 
     loadedGates = []
     loadedLines = []
@@ -289,9 +301,11 @@ def Main():
     loadedLights = []
     loadedClocks = []
 
-    global totalInputOutputCount
+    previousInputsOutputs = {}
 
-    totalInputOutputCount = 0
+    # global totalInputOutputCount
+    #
+    # totalInputOutputCount = 0
 
     timestamp = datetime.utcnow()
 
@@ -452,10 +466,8 @@ def Main():
                 loadedClocks.append(makeClock())
 
         #Check if component count has changes since last Loop
-        if(len(loadedSwitches+loadedLights+loadedClocks) != totalInputOutputCount):
-            if childProcesses and timingPipe:
-                timingPipe.send([loadedSwitches,loadedClocks,loadedLights,datetime.utcnow()])
-            totalInputOutputCount = len(loadedSwitches+loadedLights+loadedClocks)
+        # if(len(loadedSwitches+loadedLights+loadedClocks) != totalInputOutputCount):
+            #totalInputOutputCount = len(loadedSwitches+loadedLights+loadedClocks)
 
         #Start Drawing
         screen.fill(white)
@@ -503,8 +515,10 @@ def Main():
         for process in childProcesses:
             if not process.is_alive():
                 childProcesses.remove(process)
+                timingPipe = None
 
         #Update Screen
+        previousInputsOutputs = UpdateLines()
         pygame.display.flip()
         pygame.time.wait(1)
 
