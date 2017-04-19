@@ -480,7 +480,8 @@ def Main():
             PositionLines()
         for line in loadedLines:
             color = red if line[4] else lightRed
-            pygame.draw.line(screen, color, line[0][2], line[1][2], 2)
+            pygame.draw.line(screen, color, line[0][2], line[1][2], 6)
+            #pygame.draw.aaline(screen, color, line[0][2], line[1][2])
         #update clocks
         if loadedClocks:
             UpdateClocks()
