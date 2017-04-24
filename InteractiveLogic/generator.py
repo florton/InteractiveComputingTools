@@ -234,7 +234,7 @@ def LoadTimingWindow(mainProgram):
                 outputs = [("L"+str(light[5]),light[4]) for light in response[2]]
 
                 #Each datapoint = [timestamp, [(componentId,True/False),...]]
-                data = [datetime.utcnow(),inputs+outputs+clocks]
+                data = [datetime.utcnow(),inputs+outputs+clocks, [len(inputs),len(outputs),len(clocks)]]
                 dataPoints.append(data)
                 #print data
                 componentCount[1] = len(dataPoints[-1][1])
@@ -260,8 +260,10 @@ def LoadTimingWindow(mainProgram):
         for x in range(len(dataPoints[-1][1])):
             label = font.render(dataPoints[-1][1][x][0], True, black)
             screen.blit(label, (10, (80*x)+20 ))
+            if x is data[2][0] or x is data[2][0]+data[2][1]:
+                pygame.draw.line(screen, (100, 100, 100), (0,(80*x)+13), (width,(80*x)+13), 4)
 
-        previousRects = [None for x in range(len(dataPoints[-1][1]))]
+        previousRects = {}
 
         #For each dataPoint recieved from the main program
         for x in range(len(dataPoints)):
@@ -285,7 +287,7 @@ def LoadTimingWindow(mainProgram):
                     pygame.draw.rect(screen, color, lineRect)
 
                     #Draw Red/Green Transition Lines
-                    if previousRects[i]:
+                    if i in previousRects.keys():
                         #if transition is from low to high
                         if value:
                             lineColor = red
@@ -296,7 +298,7 @@ def LoadTimingWindow(mainProgram):
                             lineStart = previousRects[i].bottomright[0]-1,previousRects[i].bottomright[1]
                             lineEnd = lineStart[0] , lineRect.topleft[1]-0.5
                         if abs(lineStart[1] - lineEnd[1]) >15:
-                            pygame.draw.line(screen, lineColor, lineStart, lineEnd, 1)
+                            pygame.draw.line(screen, lineColor, lineStart, lineEnd, 2)
 
                     previousRects[i] = lineRect
 
