@@ -41,12 +41,12 @@ def makeClock():
     id = 0 if not loadedClocks else loadedClocks[-1][5]+1
     return([clockComponent, clockRect, "CLOCK", [], False, id, freq, datetime.utcnow()])
 
-# A node is a list [image, rect, "NODE", [StartLine, EndLine], None, id]
+# A node is a list [image, rect, "NODE", [StartLine, EndLine], on/off, id]
 def makeNode():
     nodeRect = nodePic.get_rect()
     nodeRect.center = mouseX,mouseY
     id = 0 if not loadedNodes else loadedNodes[-1][5]+1
-    return([nodePic,nodeRect,"NODE",[None, None],None,id])
+    return([nodePic,nodeRect,"NODE",[],False,id])
 
 #A line is a matrix list [[start_target_anchor, start_target , start_coords],
 #[end_target_anchor, end_target, end_coords],"LINE",id,on/off]
@@ -101,14 +101,13 @@ def makeLine(mouseX,mouseY,target,drawingLine):
             loadedLines.append([[anchor,target,(mouseX,mouseY)],[None,None,None],"LINE",id,False])
             if loadedLines[-1][1] == [None,None,None]:
                 loadedLines[-1][1] = [anchor,target,(mouseX,mouseY)]
-                target[3][1] = loadedLines[-1]
             else:
                 loadedLines[-1][0] = [anchor,target,(mouseX,mouseY)]
-                target[3][0] = loadedLines[-1]
+                target[3] = loadedLines[-1]
     #inputs must connect to outputs and vis versa
-    elif ((anchor in inputAnchors and (loadedLines[-1][0][0] in outputAnchors or loadedLines[-1][1][0] in outputAnchors))
+    elif (((anchor in inputAnchors and (loadedLines[-1][0][0] in outputAnchors or loadedLines[-1][1][0] in outputAnchors))
         or (anchor in outputAnchors and (loadedLines[-1][0][0] in inputAnchors or loadedLines[-1][1][0] in inputAnchors)))
-            or anchor is 7:
+            or anchor is 7):
         if anchor in outputAnchors:
             #add end target info to current (last) line
             loadedLines[-1][0] = [anchor,target,(mouseX,mouseY)]
@@ -122,10 +121,9 @@ def makeLine(mouseX,mouseY,target,drawingLine):
             #its a node
             if loadedLines[-1][1] == [None,None,None]:
                 loadedLines[-1][1] = [anchor,target,(mouseX,mouseY)]
-                target[3][1] = loadedLines[-1]
             else:
                 loadedLines[-1][0] = [anchor,target,(mouseX,mouseY)]
-                target[3][0] = loadedLines[-1]
+                target[3] = loadedLines[-1]
         UpdateLogic()
 
         return 3
@@ -445,8 +443,11 @@ def Main():
                     else:
                         clickOffset = mouseX-target[1].left , mouseY-target[1].top
                         draggingObject = target
+
+        #Delete objects released over menu icons
         if mouseKey[0] == 0 and draggingObject:
-            if draggingObject and gateSelectRect.collidepoint(draggingObject[1].center):
+            if (draggingObject and (gateSelectRect.collidepoint(draggingObject[1].center)
+                or draggingObject[1].center[0] < 50)):
                 Delete(draggingObject)
             draggingObject = None
 
@@ -508,8 +509,8 @@ def Main():
         screen.blit(saveButton,saveButtonRect)
         screen.blit(loadButton,loadButtonrect)
         screen.blit(nodeButton,nodeButtonRect)
-        #draw all gates, switches & Lines & Nodes
-        for target in loadedGates+loadedSwitches+loadedLights+loadedClocks+loadedNodes:
+        #draw all gates, switches & Lines
+        for target in loadedGates+loadedSwitches+loadedLights+loadedClocks:
             screen.blit(target[0], target[1])
         #draw all switches & IDs
         for switch in loadedSwitches:
@@ -526,8 +527,11 @@ def Main():
             PositionLines()
         for line in loadedLines:
             color = red if line[4] else lightRed
-            pygame.draw.line(screen, color, line[0][2], line[1][2], 6)
-            #pygame.draw.aaline(screen, color, line[0][2], line[1][2])
+            #pygame.draw.line(screen, color, line[0][2], line[1][2], 6)
+            pygame.draw.aaline(screen, color, line[0][2], line[1][2])
+        #Draw Nodes
+        for node in loadedNodes:
+            screen.blit(node[0], node[1])
         #update clocks
         if loadedClocks:
             UpdateClocks()

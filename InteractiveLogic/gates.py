@@ -64,6 +64,8 @@ def Evaluate(component,pathList=[],loadedLines=[],options=[False,False,False]):
 
     if name == 'LINE':
         return any(paths)
+    if name == 'NODE':
+        return any(paths)
     elif name == 'SWITCH':
         return component[4]
     elif name == 'LIGHT':
