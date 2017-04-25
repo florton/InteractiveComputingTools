@@ -55,10 +55,12 @@ def makeLine(mouseX,mouseY,target,drawingLine):
     mouseRelativeY = mouseY-target[1].top
     anchor = None
     inputAnchors = [5,0,2,3]
-    outputAnchors = [1,4,6]
+    outputAnchors = [1,4,6,7]
 
     # if drawingLine == 1 -> set line start, if == 2 -> set line end,
     # if == 3 -> set drawingLine to 1 on next mouseup
+    if target[2] == 'NODE':
+        anchor = 7
     #check if switch
     if target[2] == 'SWITCH':
         anchor = 4
@@ -94,9 +96,9 @@ def makeLine(mouseX,mouseY,target,drawingLine):
             #add current line to end target connections array
             target[3].append(loadedLines[-1])
     #inputs must connect to outputs and vis versa
-    elif (((anchor in inputAnchors and (loadedLines[-1][0][0] in outputAnchors or loadedLines[-1][1][0] in outputAnchors))
-        or (anchor in outputAnchors and (loadedLines[-1][0][0] in inputAnchors or loadedLines[-1][1][0] in inputAnchors)))
-            or anchor is 7):
+    elif ((anchor in inputAnchors and (loadedLines[-1][0][0] in outputAnchors or loadedLines[-1][1][0] in outputAnchors))
+        or (anchor in outputAnchors and (loadedLines[-1][0][0] in inputAnchors or loadedLines[-1][1][0] in inputAnchors))):
+
         if anchor in outputAnchors:
             #add end target info to current (last) line
             loadedLines[-1][0] = [anchor,target,(mouseX,mouseY)]
@@ -125,8 +127,6 @@ def Delete(object):
                 loadedLights.remove(object)
             except:
                 loadedClocks.remove(object)
-
-
 
 def Distance(a,b):
     return math.sqrt((a[0] - b[0])**2 + (a[1] - b[1])**2)
@@ -449,8 +449,11 @@ def Main():
                 continue
             #Delete existing line
             for line in loadedLines:
-                if IsBetween(line[0][2],line[1][2],(mouseX,mouseY)):
-                    DeleteLine(line)
+                points = [line[0][2]]+[y[1].center for y in line[5]]+[line[1][2]]
+                segments = [[points[x], points[x+1]] for x in range(len(points)-1)]
+                for seg in segments:
+                    if IsBetween(seg[0],seg[1],(mouseX,mouseY)):
+                        DeleteLine(line)
             #Delete gate, light, or switch
             for object in loadedGates+loadedLights+loadedSwitches+loadedClocks:
                 if object[1].collidepoint(mouseX,mouseY):
