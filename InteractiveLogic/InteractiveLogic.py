@@ -33,7 +33,7 @@ def makeLight():
     id = 0 if not loadedLights else loadedLights[-1][5]+1
     return([light,lightRect,"LIGHT",[],False,id])
 
-# A clock is a list [image, rect, "CLOCK", [dummy_array], on/off, id, freq, timestamp]
+# A clock is a list [image, rect, "CLOCK", [dummy_array], on/off, id, freq, deadClickTimestamp]
 def makeClock():
     clockRect = clockComponent.get_rect()
     clockRect.center = mouseX,mouseY
@@ -41,7 +41,7 @@ def makeClock():
     id = 0 if not loadedClocks else loadedClocks[-1][5]+1
     return([clockComponent, clockRect, "CLOCK", [], False, id, freq, datetime.utcnow()])
 
-# A node is a list [image, rect, "NODE", [StartLine, EndLine], on/off, id]
+# A node is a list [image, rect, "NODE", [dummy_array], on/off, id]
 def makeNode():
     nodeRect = nodePic.get_rect()
     nodeRect.center = mouseX,mouseY
@@ -49,7 +49,7 @@ def makeNode():
     return([nodePic,nodeRect,"NODE",[],False,id])
 
 #A line is a matrix list [[start_target_anchor, start_target , start_coords],
-#[end_target_anchor, end_target, end_coords],"LINE",id,on/off]
+#[end_target_anchor, end_target, end_coords],"LINE" ,id, on/off, [Nodes]]
 def makeLine(mouseX,mouseY,target,drawingLine):
     mouseRelativeX = mouseX-target[1].left
     mouseRelativeY = mouseY-target[1].top
@@ -59,9 +59,6 @@ def makeLine(mouseX,mouseY,target,drawingLine):
 
     # if drawingLine == 1 -> set line start, if == 2 -> set line end,
     # if == 3 -> set drawingLine to 1 on next mouseup
-    #check if node
-    if target[2] == 'NODE':
-        anchor = 7
     #check if switch
     if target[2] == 'SWITCH':
         anchor = 4
@@ -90,20 +87,12 @@ def makeLine(mouseX,mouseY,target,drawingLine):
         id = 0 if not loadedLines else loadedLines[-1][3]+1
         if anchor in outputAnchors:
             #make new line with start target info
-            loadedLines.append([[anchor,target,(mouseX,mouseY)],[None,None,None],"LINE",id,False])
+            loadedLines.append([[anchor,target,(mouseX,mouseY)],[None,None,None],"LINE",id,False,[]])
         elif anchor in inputAnchors:
-            #make new line with start target info
-            loadedLines.append([[None,None,None],[anchor,target,(mouseX,mouseY)],"LINE",id,False])
+            #make new line with end target info
+            loadedLines.append([[None,None,None],[anchor,target,(mouseX,mouseY)],"LINE",id,False,[]])
             #add current line to end target connections array
             target[3].append(loadedLines[-1])
-        else:
-            #its a node
-            loadedLines.append([[anchor,target,(mouseX,mouseY)],[None,None,None],"LINE",id,False])
-            if loadedLines[-1][1] == [None,None,None]:
-                loadedLines[-1][1] = [anchor,target,(mouseX,mouseY)]
-            else:
-                loadedLines[-1][0] = [anchor,target,(mouseX,mouseY)]
-                target[3] = loadedLines[-1]
     #inputs must connect to outputs and vis versa
     elif (((anchor in inputAnchors and (loadedLines[-1][0][0] in outputAnchors or loadedLines[-1][1][0] in outputAnchors))
         or (anchor in outputAnchors and (loadedLines[-1][0][0] in inputAnchors or loadedLines[-1][1][0] in inputAnchors)))
@@ -117,13 +106,6 @@ def makeLine(mouseX,mouseY,target,drawingLine):
             #add current line to end target connections array
             target[3].append(loadedLines[-1])
             #print target
-        else:
-            #its a node
-            if loadedLines[-1][1] == [None,None,None]:
-                loadedLines[-1][1] = [anchor,target,(mouseX,mouseY)]
-            else:
-                loadedLines[-1][0] = [anchor,target,(mouseX,mouseY)]
-                target[3] = loadedLines[-1]
         UpdateLogic()
 
         return 3
@@ -142,10 +124,8 @@ def Delete(object):
             try:
                 loadedLights.remove(object)
             except:
-                try:
-                    loadedClocks.remove(object)
-                except:
-                    loadedNodes.remove(object)
+                loadedClocks.remove(object)
+
 
 
 def Distance(a,b):
@@ -165,6 +145,8 @@ def DeleteLine(line):
         target2[3].remove(target)
     except:
         pass
+    for node in line[5]:
+        loadedNodes.remove(node)
     loadedLines.remove(line)
     UpdateLogic()
 
@@ -239,34 +221,35 @@ def PositionLines():
         for x in range(2):
             target = line[x][1]
             offset = target[1].width/10 if target else 0
+            anchor = line[x][0]
             #if NOT gate input
-            if line[x][0] == 0:
+            if anchor == 0:
                 newCoords[x] = target[1].midleft[0]+offset, target[1].midleft[1]
             #if gate output
-            elif line[x][0] == 1:
-                newCoords[x] = target[1].midright[0]-offset, target[1].midright[1]
-            #if gate input bottom
-            elif line[x][0] == 2:
-                newCoords[x] = target[1].left+offset , target[1].topleft[1] + 3*(target[1].height/4)
-            #if gate input top
-            elif line[x][0] == 3:
-                newCoords[x] = target[1].left+offset , target[1].topleft[1] + target[1].height/4
-            #if switch or clock
-            elif line[x][0] == 4 or line[x][0] == 6:
-                newCoords[x] = target[1].midright
-            #if light
-            elif line[x][0] == 5:
-                newCoords[x] = target[1].midleft
-            #if node
-            elif line[x][0] == 7:
-                newCoords[x] = target[1].center
+            elif anchor == 1:
+                    newCoords[x] = target[1].midright[0]-offset, target[1].midright[1]
+                #if gate input bottom
+            elif anchor == 2:
+                    newCoords[x] = target[1].left+offset , target[1].topleft[1] + 3*(target[1].height/4)
+                #if gate input top
+            elif anchor == 3:
+                    newCoords[x] = target[1].left+offset , target[1].topleft[1] + target[1].height/4
+                #if switch or clock
+            elif anchor == 4 or anchor == 6:
+                    newCoords[x] = target[1].midright
+                #if light
+            elif anchor == 5:
+                    newCoords[x] = target[1].midleft
+                #if node
+            elif anchor == 7:
+                    newCoords[x] = target[1].center
         line[0][2] = newCoords[0]
         line[1][2] = newCoords[1]
 
 def UpdateLogic():
     #Run Logic Simulation
     currentInputsOutputs = {}
-    for component in loadedGates+loadedLines+loadedClocks+loadedSwitches+loadedLights+loadedNodes:
+    for component in loadedGates+loadedLines+loadedClocks+loadedSwitches+loadedLights:
         component[4] = Evaluate(component)
         if component[2] in ["SWITCH","LIGHT","CLOCK"]:
             currentInputsOutputs[component[2]+str(component[5])] = component[4]
@@ -326,8 +309,7 @@ def Main():
     loadedNodes = []
 
     previousInputsOutputs = {}
-
-    timestamp = datetime.utcnow()
+    deadClickTimestamp = datetime.min
 
     global childProcesses, timingPipe
 
@@ -352,7 +334,7 @@ def Main():
 
     global gateSelect, gateSelectRect , lineButton , lineButtonRect
     global switchButton, switchButtonRect , lightButton, lightButtonRect
-    global clockButton, clockButtonRect, nodeButton, nodeButtonRect
+    global clockButton, clockButtonRect
     global timingButton, timingButtonRect, truthTableButton, truthTableButtonRect
     global saveButton, saveButtonRect, loadButton, loadButtonrect
 
@@ -383,8 +365,6 @@ def Main():
     loadButton = pygame.image.load("gatePics\LOADBUTTON.png")
     loadButtonrect = loadButton.get_rect()
 
-    nodeButton = pygame.image.load("gatePics\NODEBUTTON.png")
-    nodeButtonRect = nodeButton.get_rect()
 
     #Main Loop
     while True:
@@ -395,13 +375,12 @@ def Main():
         loadButtonrect.midleft = (0, height/2 -200)
 
         lineButtonRect.midleft = (0, height/2 -120)
-        nodeButtonRect.midleft = (0, height/2 -60)
-        switchButtonRect.midleft = (0, height/2)
-        clockButtonRect.midleft = (0, height/2 +60)
-        lightButtonRect.midleft = (0, height/2 +120)
+        switchButtonRect.midleft = (0, height/2 - 60)
+        clockButtonRect.midleft = (0, height/2)
+        lightButtonRect.midleft = (0, height/2 +60)
 
-        truthTableButtonRect.midleft = (0, height/2 +200)
-        timingButtonRect.midleft = (0, height/2 +260)
+        truthTableButtonRect.midleft = (0, height/2 +140)
+        timingButtonRect.midleft = (0, height/2 +200)
 
         #Get Input Events
         for event in pygame.event.get():
@@ -427,6 +406,7 @@ def Main():
                     mouseKey = tuple(tempbuttons)
                 if(Distance(clickCoords, event.pos)<10):
                     Click(clickCoords)
+                deadClickTimestamp = datetime.utcnow()
             if event.type == pygame.MOUSEMOTION:
                 mouseX,mouseY = event.pos
                 mouseKey = event.buttons
@@ -438,11 +418,18 @@ def Main():
             for target in loadedGates+loadedSwitches+loadedLights+loadedClocks+loadedNodes:
                 if target[1].collidepoint(mouseX,mouseY):
                     #maybe draw a line instead
-                    if drawingLine and drawingLine!=3:
+                    if (drawingLine and drawingLine!=3) and target[2] != 'NODE':
                         drawingLine = makeLine(mouseX,mouseY,target,drawingLine)
                     else:
                         clickOffset = mouseX-target[1].left , mouseY-target[1].top
                         draggingObject = target
+                    deadClickTimestamp = datetime.min
+            #Create nodes on double click if drawing a line
+            if drawingLine == 2:
+                if (datetime.utcnow()-deadClickTimestamp).total_seconds() < 0.2:
+                    loadedNodes.append(makeNode())
+                    loadedLines[-1][5].append(loadedNodes[-1])
+                    deadClickTimestamp = datetime.min
 
         #Delete objects released over menu icons
         if mouseKey[0] == 0 and draggingObject:
@@ -465,7 +452,7 @@ def Main():
                 if IsBetween(line[0][2],line[1][2],(mouseX,mouseY)):
                     DeleteLine(line)
             #Delete gate, light, or switch
-            for object in loadedGates+loadedLights+loadedSwitches+loadedClocks+loadedNodes:
+            for object in loadedGates+loadedLights+loadedSwitches+loadedClocks:
                 if object[1].collidepoint(mouseX,mouseY):
                     Delete(object)
 
@@ -492,9 +479,6 @@ def Main():
             #Spawn Clock
             if clockButtonRect.collidepoint(mouseX,mouseY):
                 loadedClocks.append(makeClock())
-            #Spawn Nodes
-            if nodeButtonRect.collidepoint(mouseX,mouseY):
-                loadedNodes.append(makeNode())
 
         #Start Drawing
         screen.fill(white)
@@ -508,7 +492,6 @@ def Main():
         screen.blit(timingButton,timingButtonRect)
         screen.blit(saveButton,saveButtonRect)
         screen.blit(loadButton,loadButtonrect)
-        screen.blit(nodeButton,nodeButtonRect)
         #draw all gates, switches & Lines
         for target in loadedGates+loadedSwitches+loadedLights+loadedClocks:
             screen.blit(target[0], target[1])
@@ -527,8 +510,13 @@ def Main():
             PositionLines()
         for line in loadedLines:
             color = red if line[4] else lightRed
-            #pygame.draw.line(screen, color, line[0][2], line[1][2], 6)
-            pygame.draw.aaline(screen, color, line[0][2], line[1][2])
+            start = line[0][2]
+            for x in range(len(line[5])):
+                end = line[5][x][1].center
+                pygame.draw.line(screen, color, start, end, 6)
+                start = end
+            pygame.draw.line(screen, color, start, line[1][2], 6)
+            #pygame.draw.aaline(screen, color, line[0][2], line[1][2])
         #Draw Nodes
         for node in loadedNodes:
             screen.blit(node[0], node[1])
