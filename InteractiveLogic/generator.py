@@ -223,20 +223,18 @@ def LoadTimingWindow(mainProgram):
 
         #Get pipe info from main program
         if(mainProgram.poll()):
-            #response = [loadedSwitches,loadedClocks,loadedLights,parentTimestamp]
+            #The response  is a list = [loadedSwitches,loadedClocks,loadedLights,parentTimestamp]
             response = mainProgram.recv()
             timeSinceResponse = (nowTime - response[3]).total_seconds()
-            #print timeSinceResponse
 
-            if abs(timeSinceResponse) < 0.01 or not dataPoints:
+            if abs(timeSinceResponse) < 0.1 or not dataPoints:
                 inputs = [("S"+str(switch[5]),switch[4]) for switch in response[0]]
                 clocks = [("C"+str(clock[5]),clock[4]) for clock in response[1]]
                 outputs = [("L"+str(light[5]),light[4]) for light in response[2]]
 
-                #Each datapoint = [timestamp, [(componentId,True/False),...]]
+                #Each datapoint is a list = [timestamp, [(componentId,True/False),...]]
                 data = [datetime.utcnow(),inputs+outputs+clocks, [len(inputs),len(outputs),len(clocks)]]
                 dataPoints.append(data)
-                #print data
                 componentCount[1] = len(dataPoints[-1][1])
 
         #Reset window if number of combonents is changed
