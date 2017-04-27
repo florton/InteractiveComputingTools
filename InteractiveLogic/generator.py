@@ -144,10 +144,6 @@ def GenerateTruthTable(loadedLights,loadedSwitches,loadedLines):
     #put switches back where they were
     for x in range(len(loadedSwitches)):
         loadedSwitches[x][4] = oldSwitches[x]
-
-    #print inputs
-    #print outputs
-
     #open truth table window in a new process
     newProcess = Process(target=LoadTruthWindow, args=(inputs,outputs,ids))
     newProcess.start()

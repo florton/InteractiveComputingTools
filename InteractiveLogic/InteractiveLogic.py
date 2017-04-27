@@ -160,7 +160,7 @@ def TurnLight(light, bool):
         light[4] = False
 
 def Click(clickCoords):
-    global timingPipe,loadedGates,loadedLines,loadedSwitches,loadedLights,loadedClocks
+    global timingPipe,loadedGates,loadedLines,loadedSwitches,loadedLights,loadedClocks, loadedNodes
     if not drawingLine:
         #Flip switch if clicked on
         for switch in loadedSwitches:
@@ -175,18 +175,19 @@ def Click(clickCoords):
 
         #Save current circuit to file
         if saveButtonRect.collidepoint(mouseX,mouseY):
-            SaveGame(loadedGates,loadedLines,loadedSwitches,loadedLights,loadedClocks)
+            SaveGame(loadedGates,loadedLines,loadedSwitches,loadedLights,loadedClocks,loadedNodes)
 
         #Load previous circuit from file
         if loadButtonrect.collidepoint(mouseX,mouseY):
             try:
-                result = LoadGame(switchOn,switchOff,lightOn,lightOff,clockComponent,gatePics)
+                result = LoadGame(switchOn,switchOff,lightOn,lightOff,clockComponent,gatePics,nodePic)
                 if result:
                     loadedGates = result[0]
                     loadedLines = result[1]
                     loadedSwitches = result[2]
                     loadedLights = result[3]
                     loadedClocks = result[4]
+                    loadedNodes = result[5]
 
                     for process in childProcesses:
                         process.terminate()
@@ -234,15 +235,13 @@ def PositionLines():
                 #if gate input top
             elif anchor == 3:
                     newCoords[x] = target[1].left+offset , target[1].topleft[1] + target[1].height/4
-                #if switch or clock
-            elif anchor == 4 or anchor == 6:
+                #if clock
+            elif anchor == 6:
                     newCoords[x] = target[1].midright
-                #if light
-            elif anchor == 5:
-                    newCoords[x] = target[1].midleft
-                #if node
-            elif anchor == 7:
+                #if light, switch or node
+            elif anchor == 5 or anchor == 4 or anchor == 7:
                     newCoords[x] = target[1].center
+
         line[0][2] = newCoords[0]
         line[1][2] = newCoords[1]
 
@@ -498,16 +497,6 @@ def Main():
         #draw all gates, switches & Lines
         for target in loadedGates+loadedSwitches+loadedLights+loadedClocks:
             screen.blit(target[0], target[1])
-        #draw all switches & IDs
-        for switch in loadedSwitches:
-            screen.blit(switch[0],switch[1])
-            switchID = font.render('S'+str(switch[5]), True, black)
-            screen.blit(switchID, (switch[1].x, switch[1].y+30))
-        #draw all lights & IDs
-        for light in loadedLights:
-            screen.blit(light[0],light[1])
-            lightID = font.render('L'+str(light[5]), True, black)
-            screen.blit(lightID, (light[1].x, light[1].y+30))
         #draw and update all lines
         if draggingObject or drawingLine:
             PositionLines()
@@ -523,6 +512,16 @@ def Main():
         #Draw Nodes
         for node in loadedNodes:
             screen.blit(node[0], node[1])
+        #draw all switches & IDs
+        for switch in loadedSwitches:
+            screen.blit(switch[0],switch[1])
+            switchID = font.render('S'+str(switch[5]), True, black)
+            screen.blit(switchID, (switch[1].x, switch[1].y+30))
+        #draw all lights & IDs
+        for light in loadedLights:
+            screen.blit(light[0],light[1])
+            lightID = font.render('L'+str(light[5]), True, black)
+            screen.blit(lightID, (light[1].x, light[1].y+30))
         #update clocks
         if loadedClocks:
             UpdateClocks()

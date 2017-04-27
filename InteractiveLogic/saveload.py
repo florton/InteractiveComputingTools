@@ -3,17 +3,18 @@ import tkFileDialog
 import pickle
 import pygame
 
-def SaveGame(loadedGates,loadedLines,loadedSwitches,loadedLights,loadedClocks):
+def SaveGame(loadedGates,loadedLines,loadedSwitches,loadedLights,loadedClocks,loadedNodes):
     #gateData =  [None, rect, gate_name_string, [(input_connection_name, id),...], on/off, id]
     gatesData = []
     for gate in loadedGates:
         gatesData.append( [None,gate[1],gate[2],[],gate[4],gate[5]])
 
     #lineData = [[start_target_anchor, (start_target_name, id) , start_coords],
-    #[end_target_anchor, (end_target_name, id), end_coords],"LINE",id,on/off]
+    #[end_target_anchor, (end_target_name, id), end_coords],"LINE",id,on/off,[nodes]]
     linesData = []
     for line in loadedLines:
-        linesData.append([[],[],line[2],line[3],line[4]])
+        nodes = [node[5] for node in line[5]]
+        linesData.append([[],[],line[2],line[3],line[4], nodes])
         linesData[-1][0] = [line[0][0],(line[0][1][2],line[0][1][5]),line[0][2]]
         linesData[-1][1] = [line[1][0],(line[1][1][2],line[1][1][5]),line[1][2]]
 
@@ -28,7 +29,9 @@ def SaveGame(loadedGates,loadedLines,loadedSwitches,loadedLights,loadedClocks):
     #clocksData = [None, rect, "CLOCK", [dummy_array], on/off, id, freq, timestamp]
     clocksData = [[None]+clock[1:] for clock in loadedClocks]
 
-    saveData = [gatesData,linesData,switchData,lightsData,clocksData]
+    nodesData = [[None]+node[1:] for node in loadedNodes]
+
+    saveData = [gatesData,linesData,switchData,lightsData,clocksData,nodesData]
 
     Tk().withdraw()
     filename = tkFileDialog.asksaveasfilename(**{'defaultextension':'.logic'})
@@ -58,7 +61,7 @@ def lookupComponent(name, componentId,switchData,clocksData,gatesData,lightsData
 
     print name, componentId
 
-def LoadGame(switchOn,switchOff,lightOn,lightOff,clockComponent,gatePics):
+def LoadGame(switchOn,switchOff,lightOn,lightOff,clockComponent,gatePics,nodePic):
     gateNames = ['AND','OR','NOT','NOR','NAND','XOR','XNOR']
 
     Tk().withdraw()
@@ -77,6 +80,8 @@ def LoadGame(switchOn,switchOff,lightOn,lightOff,clockComponent,gatePics):
         gatesData = [[gatePics[gateNames.index(gate[2])]] +gate[1:] for gate in loadData[0]]
         #lights
         lightsData = [[lightOn if light[4] else lightOff]+light[1:] for light in loadData[3]]
+        #nodes
+        nodesData = [[nodePic]+node[1:] for node in loadData[5]]
         #lines
         linesData = []
         for line in loadData[1]:
@@ -88,12 +93,15 @@ def LoadGame(switchOn,switchOff,lightOn,lightOff,clockComponent,gatePics):
             name2 = line[1][1][0]
             id2 = line[1][1][1]
             endComponent = lookupComponent(name2,id2,switchData,clocksData,gatesData,lightsData)
-
             line[0][1] = startComponent
             line[1][1] = endComponent
+
+            nodeIDS = [ID for ID in line[5]]
+            line[5] = [next(node for node in nodesData if node[5] is nodeID) for nodeID in nodeIDS]
+
             linesData.append(line)
             endComponent[3].append(linesData[-1])
 
-        return [gatesData,linesData,switchData,lightsData,clocksData]
+        return [gatesData,linesData,switchData,lightsData,clocksData,nodesData]
     else:
         return None
