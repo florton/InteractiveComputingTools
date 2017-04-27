@@ -55,12 +55,10 @@ def makeLine(mouseX,mouseY,target,drawingLine):
     mouseRelativeY = mouseY-target[1].top
     anchor = None
     inputAnchors = [5,0,2,3]
-    outputAnchors = [1,4,6,7]
+    outputAnchors = [1,4,6]
 
     # if drawingLine == 1 -> set line start, if == 2 -> set line end,
     # if == 3 -> set drawingLine to 1 on next mouseup
-    if target[2] == 'NODE':
-        anchor = 7
     #check if switch
     if target[2] == 'SWITCH':
         anchor = 4
@@ -414,7 +412,7 @@ def Main():
         if draggingObject and not drawingLine:
             draggingObject[1].topleft = mouseX - clickOffset[0] , mouseY - clickOffset[1]
         elif mouseKey[0] == 1:
-            for target in loadedGates+loadedSwitches+loadedLights+loadedClocks+loadedNodes:
+            for target in loadedGates+loadedSwitches+loadedLights+loadedClocks:
                 if target[1].collidepoint(mouseX,mouseY):
                     #maybe draw a line instead
                     if (drawingLine and drawingLine!=3) and target[2] != 'NODE':
@@ -427,7 +425,10 @@ def Main():
             if drawingLine == 2:
                 if (datetime.utcnow()-deadClickTimestamp).total_seconds() < 0.2:
                     loadedNodes.append(makeNode())
-                    loadedLines[-1][5].append(loadedNodes[-1])
+                    if loadedLines[-1][0][0] is None:
+                        loadedLines[-1][5] = [loadedNodes[-1]] + loadedLines[-1][5]
+                    else:
+                        loadedLines[-1][5].append(loadedNodes[-1])
                     deadClickTimestamp = datetime.min
 
         #Delete objects released over menu icons
