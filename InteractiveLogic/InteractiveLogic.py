@@ -52,9 +52,10 @@ def makeNode():
 # merges node pointers into new line
 def connectLines(clickedNode, currentLine):
     parentLine = next(line for line in loadedLines if clickedNode in line[5])
-    for node in currentLine[5]:
+    firstIndex = parentLine[5].index(clickedNode)+1
+    for node in parentLine[5][:firstIndex]:
         node[6] += 1
-    newLine = [parentLine[0],currentLine[1],"LINE",currentLine[3],False,currentLine[5]+parentLine[5]]
+    newLine = [parentLine[0],currentLine[1],"LINE",currentLine[3],False,parentLine[5][:firstIndex]+currentLine[5]]
     return newLine
 #A line is a matrix list [[start_target_anchor, start_target , start_coords],
 #[end_target_anchor, end_target, end_coords],"LINE" ,id, on/off, [Nodes]]
@@ -115,7 +116,6 @@ def makeLine(mouseX,mouseY,target,drawingLine):
             target[3].append(loadedLines[-1])
             #print target
         UpdateLogic()
-
         return 3
     return 2
 
@@ -226,17 +226,22 @@ def Click(clickCoords):
             timingPipe = result[1]
             timingPipe.send([loadedSwitches,loadedClocks,loadedLights,datetime.utcnow()])
     else:
-        pass
-        # for node in loadedNodes:
-        #     if node[1].collidepoint(mouseX,mouseY) and node not in loadedLines[-1]:
-        #         print "here"
-        #         if drawingLine == 1:
-        #             id = 0 if not loadedLines else loadedLines[-1][3]+1
-        #             loadedLines.append([[None,None,None],[None,None,None],"LINE",id,False,[]])
-        #             loadedLines[-1] = connectLines(node, loadedLines[-1])
-        #             drawingLine = 2
-        #         elif drawingLine == 2 and node not in loadedLines[-1]:
-        #             loadedLines[-1] = connectLines(node, loadedLines[-1])
+        print "hereq"
+        for node in loadedNodes:
+            print "wewew"
+            if node[1].collidepoint(mouseX,mouseY):
+                print "thewr"
+                if drawingLine == 1:
+                    print "here"
+                    id = 0 if not loadedLines else loadedLines[-1][3]+1
+                    loadedLines.append([[None,None,None],[None,None,None],"LINE",id,False,[]])
+                    loadedLines[-1] = connectLines(node, loadedLines[-1])
+                    drawingLine = 2
+                elif drawingLine == 2 and node not in loadedLines[-1][5]:
+                    print "wjhere"
+                    loadedLines[-1] = connectLines(node, loadedLines[-1])
+                    loadedLines[-1][1][1][3].append(loadedLines[-1])
+                    drawingLine = 1
 
 def PositionLines():
     for line in loadedLines:
@@ -446,8 +451,11 @@ def Main():
                         draggingObject = target
                     deadClickTimestamp = datetime.min
             #Create nodes on double click if drawing a line
+            print drawingLine
             if drawingLine == 2:
+                print "xzcascz"
                 if (datetime.utcnow()-deadClickTimestamp).total_seconds() < 0.2:
+                    print "asdasd"
                     loadedNodes.append(makeNode())
                     if loadedLines[-1][0][0] is None:
                         loadedLines[-1][5] = [loadedNodes[-1]] + loadedLines[-1][5]
