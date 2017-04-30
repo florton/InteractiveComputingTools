@@ -41,13 +41,21 @@ def makeClock():
     id = 0 if not loadedClocks else loadedClocks[-1][5]+1
     return([clockComponent, clockRect, "CLOCK", [], False, id, freq, datetime.utcnow()])
 
-# A node is a list [image, rect, "NODE", [dummy_array], on/off, id]
+# A node is a list [image, rect, "NODE", [dummy_array], on/off, id, count]
 def makeNode():
     nodeRect = nodePic.get_rect()
     nodeRect.center = mouseX,mouseY
     id = 0 if not loadedNodes else loadedNodes[-1][5]+1
-    return([nodePic,nodeRect,"NODE",[],False,id])
+    return([nodePic,nodeRect,"NODE",[],False,id, 1])
 
+# when a node is clicked "merge" the current line and connected line
+# merges node pointers into new line
+def connectLines(clickedNode, currentLine):
+    parentLine = next(line for line in loadedLines if clickedNode in line[5])
+    for node in currentLine[5]:
+        node[6] += 1
+    newLine = [parentLine[0],currentLine[1],"LINE",currentLine[3],False,currentLine[5]+parentLine[5]]
+    return newLine
 #A line is a matrix list [[start_target_anchor, start_target , start_coords],
 #[end_target_anchor, end_target, end_coords],"LINE" ,id, on/off, [Nodes]]
 def makeLine(mouseX,mouseY,target,drawingLine):
@@ -144,7 +152,10 @@ def DeleteLine(line):
     except:
         pass
     for node in line[5]:
-        loadedNodes.remove(node)
+        if node[6] is 1:
+            loadedNodes.remove(node)
+        else:
+            node[6] -= 1
     loadedLines.remove(line)
     UpdateLogic()
 
@@ -158,7 +169,8 @@ def TurnLight(light, bool):
         light[4] = False
 
 def Click(clickCoords):
-    global timingPipe,loadedGates,loadedLines,loadedSwitches,loadedLights,loadedClocks, loadedNodes
+    global timingPipe,loadedGates,loadedLines,loadedSwitches,loadedLights
+    global loadedClocks, loadedNodes, drawingLine
     if not drawingLine:
         #Flip switch if clicked on
         for switch in loadedSwitches:
@@ -213,6 +225,18 @@ def Click(clickCoords):
 
             timingPipe = result[1]
             timingPipe.send([loadedSwitches,loadedClocks,loadedLights,datetime.utcnow()])
+    else:
+        pass
+        # for node in loadedNodes:
+        #     if node[1].collidepoint(mouseX,mouseY) and node not in loadedLines[-1]:
+        #         print "here"
+        #         if drawingLine == 1:
+        #             id = 0 if not loadedLines else loadedLines[-1][3]+1
+        #             loadedLines.append([[None,None,None],[None,None,None],"LINE",id,False,[]])
+        #             loadedLines[-1] = connectLines(node, loadedLines[-1])
+        #             drawingLine = 2
+        #         elif drawingLine == 2 and node not in loadedLines[-1]:
+        #             loadedLines[-1] = connectLines(node, loadedLines[-1])
 
 def PositionLines():
     for line in loadedLines:
@@ -412,7 +436,7 @@ def Main():
         if draggingObject and not drawingLine:
             draggingObject[1].topleft = mouseX - clickOffset[0] , mouseY - clickOffset[1]
         elif mouseKey[0] == 1:
-            for target in loadedGates+loadedSwitches+loadedLights+loadedClocks:
+            for target in loadedGates+loadedSwitches+loadedLights+loadedClocks+loadedNodes:
                 if target[1].collidepoint(mouseX,mouseY):
                     #maybe draw a line instead
                     if (drawingLine and drawingLine!=3) and target[2] != 'NODE':
