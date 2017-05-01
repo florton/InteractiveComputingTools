@@ -100,21 +100,19 @@ def makeLine(mouseX,mouseY,target,drawingLine):
         elif anchor in inputAnchors:
             #make new line with end target info
             loadedLines.append([[None,None,None],[anchor,target,(mouseX,mouseY)],"LINE",id,False,[]])
-            #add current line to end target connections array
-            target[3].append(loadedLines[-1])
     #inputs must connect to outputs and vis versa
     elif ((anchor in inputAnchors and (loadedLines[-1][0][0] in outputAnchors or loadedLines[-1][1][0] in outputAnchors))
         or (anchor in outputAnchors and (loadedLines[-1][0][0] in inputAnchors or loadedLines[-1][1][0] in inputAnchors))):
-
         if anchor in outputAnchors:
             #add end target info to current (last) line
             loadedLines[-1][0] = [anchor,target,(mouseX,mouseY)]
+            #add current line to end target connections array
+            loadedLines[-1][1][1][3].append(loadedLines[-1])
         elif anchor in inputAnchors:
             #add start target info to current (last) line
             loadedLines[-1][1] = [anchor,target,(mouseX,mouseY)]
             #add current line to end target connections array
             target[3].append(loadedLines[-1])
-            #print target
         UpdateLogic()
         return 3
     return 2
@@ -226,19 +224,14 @@ def Click(clickCoords):
             timingPipe = result[1]
             timingPipe.send([loadedSwitches,loadedClocks,loadedLights,datetime.utcnow()])
     else:
-        print "hereq"
         for node in loadedNodes:
-            print "wewew"
             if node[1].collidepoint(mouseX,mouseY):
-                print "thewr"
                 if drawingLine == 1:
-                    print "here"
                     id = 0 if not loadedLines else loadedLines[-1][3]+1
                     loadedLines.append([[None,None,None],[None,None,None],"LINE",id,False,[]])
                     loadedLines[-1] = connectLines(node, loadedLines[-1])
                     drawingLine = 2
                 elif drawingLine == 2 and node not in loadedLines[-1][5]:
-                    print "wjhere"
                     loadedLines[-1] = connectLines(node, loadedLines[-1])
                     loadedLines[-1][1][1][3].append(loadedLines[-1])
                     drawingLine = 1
@@ -451,11 +444,8 @@ def Main():
                         draggingObject = target
                     deadClickTimestamp = datetime.min
             #Create nodes on double click if drawing a line
-            print drawingLine
             if drawingLine == 2:
-                print "xzcascz"
                 if (datetime.utcnow()-deadClickTimestamp).total_seconds() < 0.2:
-                    print "asdasd"
                     loadedNodes.append(makeNode())
                     if loadedLines[-1][0][0] is None:
                         loadedLines[-1][5] = [loadedNodes[-1]] + loadedLines[-1][5]
