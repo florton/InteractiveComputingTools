@@ -68,8 +68,12 @@ def makeLine(mouseX,mouseY,target,drawingLine):
 
     # if drawingLine == 1 -> set line start, if == 2 -> set line end,
     # if == 3 -> set drawingLine to 1 on next mouseup
+    print target[2]
+    #check if node
+    if target[2] == 'NODE':
+        anchor = 7
     #check if switch
-    if target[2] == 'SWITCH':
+    elif target[2] == 'SWITCH':
         anchor = 4
     #else check if light
     elif target[2] == 'LIGHT':
@@ -79,6 +83,7 @@ def makeLine(mouseX,mouseY,target,drawingLine):
         anchor = 6
     #otherwise its a gate
     elif mouseRelativeX > 2*(target[1].width/3):
+        print "woah"
         #all gates' output
         anchor = 1
     elif mouseRelativeX < target[1].width/3:
@@ -92,7 +97,21 @@ def makeLine(mouseX,mouseY,target,drawingLine):
     #if user clicked a non-anchor part of the gate just return
     else:
         return drawingLine
-    if drawingLine == 1:
+    if anchor == 7:
+        print "hello"
+        for node in loadedNodes:
+            if node[1].collidepoint(mouseX,mouseY):
+                print "hi"
+                if drawingLine == 1:
+                    id = 0 if not loadedLines else loadedLines[-1][3]+1
+                    loadedLines.append([[None,None,None],[None,None,None],"LINE",id,False,[]])
+                    loadedLines[-1] = connectLines(node, loadedLines[-1])
+                    return 2
+                elif drawingLine == 2 and node not in loadedLines[-1][5] and loadedLines[-1][1][0] in inputAnchors:
+                    loadedLines[-1] = connectLines(node, loadedLines[-1])
+                    loadedLines[-1][1][1][3].append(loadedLines[-1])
+                    return 1
+    elif drawingLine == 1:
         id = 0 if not loadedLines else loadedLines[-1][3]+1
         if anchor in outputAnchors:
             #make new line with start target info
@@ -156,7 +175,6 @@ def DeleteLine(line):
             node[6] -= 1
     loadedLines.remove(line)
     UpdateLogic()
-
 
 def TurnLight(light, bool):
     if bool:
@@ -223,18 +241,6 @@ def Click(clickCoords):
 
             timingPipe = result[1]
             timingPipe.send([loadedSwitches,loadedClocks,loadedLights,datetime.utcnow()])
-    else:
-        for node in loadedNodes:
-            if node[1].collidepoint(mouseX,mouseY):
-                if drawingLine == 1:
-                    id = 0 if not loadedLines else loadedLines[-1][3]+1
-                    loadedLines.append([[None,None,None],[None,None,None],"LINE",id,False,[]])
-                    loadedLines[-1] = connectLines(node, loadedLines[-1])
-                    drawingLine = 2
-                elif drawingLine == 2 and node not in loadedLines[-1][5]:
-                    loadedLines[-1] = connectLines(node, loadedLines[-1])
-                    loadedLines[-1][1][1][3].append(loadedLines[-1])
-                    drawingLine = 1
 
 def PositionLines():
     for line in loadedLines:
@@ -437,7 +443,7 @@ def Main():
             for target in loadedGates+loadedSwitches+loadedLights+loadedClocks+loadedNodes:
                 if target[1].collidepoint(mouseX,mouseY):
                     #maybe draw a line instead
-                    if (drawingLine and drawingLine!=3) and target[2] != 'NODE':
+                    if drawingLine and drawingLine!=3:
                         drawingLine = makeLine(mouseX,mouseY,target,drawingLine)
                     else:
                         clickOffset = mouseX-target[1].left , mouseY-target[1].top
