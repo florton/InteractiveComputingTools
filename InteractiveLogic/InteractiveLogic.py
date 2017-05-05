@@ -68,7 +68,6 @@ def makeLine(mouseX,mouseY,target,drawingLine):
 
     # if drawingLine == 1 -> set line start, if == 2 -> set line end,
     # if == 3 -> set drawingLine to 1 on next mouseup
-    print target[2]
     #check if node
     if target[2] == 'NODE':
         anchor = 7
@@ -83,7 +82,6 @@ def makeLine(mouseX,mouseY,target,drawingLine):
         anchor = 6
     #otherwise its a gate
     elif mouseRelativeX > 2*(target[1].width/3):
-        print "woah"
         #all gates' output
         anchor = 1
     elif mouseRelativeX < target[1].width/3:
@@ -98,10 +96,8 @@ def makeLine(mouseX,mouseY,target,drawingLine):
     else:
         return drawingLine
     if anchor == 7:
-        print "hello"
         for node in loadedNodes:
             if node[1].collidepoint(mouseX,mouseY):
-                print "hi"
                 if drawingLine == 1:
                     id = 0 if not loadedLines else loadedLines[-1][3]+1
                     loadedLines.append([[None,None,None],[None,None,None],"LINE",id,False,[]])
@@ -110,7 +106,7 @@ def makeLine(mouseX,mouseY,target,drawingLine):
                 elif drawingLine == 2 and node not in loadedLines[-1][5] and loadedLines[-1][1][0] in inputAnchors:
                     loadedLines[-1] = connectLines(node, loadedLines[-1])
                     loadedLines[-1][1][1][3].append(loadedLines[-1])
-                    return 1
+                    return 3
     elif drawingLine == 1:
         id = 0 if not loadedLines else loadedLines[-1][3]+1
         if anchor in outputAnchors:
