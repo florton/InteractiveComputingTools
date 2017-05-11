@@ -1,4 +1,4 @@
-import sys, pygame, math
+import sys, pygame, math, os
 from pygame.locals import *
 from gates import Evaluate
 from generator import GenerateTruthTable, TruthTableError, GenerateTimingDiagram
@@ -7,7 +7,9 @@ from saveload import SaveGame, LoadGame
 
 #Extra code for PyInstaller building
 if getattr(sys, 'frozen', False):
-    os.chdir(sys._MEIPASS)
+    application_path = sys._MEIPASS
+else:
+    application_path = os.path.dirname(os.path.abspath(__file__))
 
 # A gate is a list [image, rect, gate_name_string, [connections_on_input_anchors], on/off, id]
 def makeGate(name):
@@ -305,7 +307,7 @@ def Main():
 
     global font, black
 
-    font=pygame.font.Font("gatePics/freesansbold.ttf", 20)
+    font=pygame.font.Font(os.path.join(application_path, "gatePics/freesansbold.ttf"), 20)
     white = 255, 255, 255
     black = 0,0,0
     red = 255,0,0
@@ -340,18 +342,18 @@ def Main():
     global gateNames, gatePics, draggingObject, drawingLine
 
     gateNames = ['AND','OR','NOT','NOR','NAND','XOR','XNOR']
-    gatePics = [pygame.image.load("gatePics\\" + name + ".png") for name in gateNames]
+    gatePics = [pygame.image.load(os.path.join(application_path, "gatePics\\" + name + ".png")) for name in gateNames]
     draggingObject = None
     drawingLine = False
 
     global switchOn,switchOff, lightOn, lightOff, clockComponent, nodePic
 
-    switchOn = pygame.image.load("gatePics\SWITCHON.png")
-    switchOff = pygame.image.load("gatePics\SWITCHOFF.png")
-    lightOff = pygame.image.load("gatePics\LIGHTOFF.png")
-    lightOn = pygame.image.load("gatePics\LIGHTON.png")
-    clockComponent = pygame.image.load("gatePics\CLOCK.png")
-    nodePic = pygame.image.load("gatePics\NODE.png")
+    switchOn = pygame.image.load(os.path.join(application_path, "gatePics\SWITCHON.png"))
+    switchOff = pygame.image.load(os.path.join(application_path, "gatePics\SWITCHOFF.png"))
+    lightOff = pygame.image.load(os.path.join(application_path, "gatePics\LIGHTOFF.png"))
+    lightOn = pygame.image.load(os.path.join(application_path, "gatePics\LIGHTON.png"))
+    clockComponent = pygame.image.load(os.path.join(application_path, "gatePics\CLOCK.png"))
+    nodePic = pygame.image.load(os.path.join(application_path, "gatePics\NODE.png"))
 
     global gateSelect, gateSelectRect , lineButton , lineButtonRect
     global switchButton, switchButtonRect , lightButton, lightButtonRect
@@ -359,31 +361,31 @@ def Main():
     global timingButton, timingButtonRect, truthTableButton, truthTableButtonRect
     global saveButton, saveButtonRect, loadButton, loadButtonrect
 
-    gateSelect = pygame.image.load("gatePics\GATES.png")
+    gateSelect = pygame.image.load(os.path.join(application_path, "gatePics\GATES.png"))
     gateSelectRect = gateSelect.get_rect()
 
-    lineButton = pygame.image.load("gatePics\LINE.png")
+    lineButton = pygame.image.load(os.path.join(application_path, "gatePics\LINE.png"))
     lineButtonRect = lineButton.get_rect()
 
-    switchButton = pygame.image.load("gatePics\SWITCHBUTTON.png")
+    switchButton = pygame.image.load(os.path.join(application_path, "gatePics\SWITCHBUTTON.png"))
     switchButtonRect = switchButton.get_rect()
 
-    lightButton = pygame.image.load("gatePics\LIGHTBUTTON.png")
+    lightButton = pygame.image.load(os.path.join(application_path, "gatePics\LIGHTBUTTON.png"))
     lightButtonRect = lightButton.get_rect()
 
-    clockButton = pygame.image.load("gatePics\CLOCKBUTTON.png")
+    clockButton = pygame.image.load(os.path.join(application_path, "gatePics\CLOCKBUTTON.png"))
     clockButtonRect = clockButton.get_rect()
 
-    truthTableButton = pygame.image.load("gatePics\TRUTHTABLEBUTTON.png")
+    truthTableButton = pygame.image.load(os.path.join(application_path, "gatePics\TRUTHTABLEBUTTON.png"))
     truthTableButtonRect = truthTableButton.get_rect()
 
-    timingButton = pygame.image.load("gatePics\TIMINGBUTTON.png")
+    timingButton = pygame.image.load(os.path.join(application_path, "gatePics\TIMINGBUTTON.png"))
     timingButtonRect = timingButton.get_rect()
 
-    saveButton = pygame.image.load("gatePics\SAVEBUTTON.png")
+    saveButton = pygame.image.load(os.path.join(application_path, "gatePics\SAVEBUTTON.png"))
     saveButtonRect = saveButton.get_rect()
 
-    loadButton = pygame.image.load("gatePics\LOADBUTTON.png")
+    loadButton = pygame.image.load(os.path.join(application_path, "gatePics\LOADBUTTON.png"))
     loadButtonrect = loadButton.get_rect()
 
 

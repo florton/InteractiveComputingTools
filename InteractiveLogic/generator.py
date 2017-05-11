@@ -1,4 +1,4 @@
-import sys, pygame, math
+import sys, pygame, math, os
 import subprocess
 from multiprocessing import Process, Pipe
 from pygame.locals import *
@@ -172,11 +172,11 @@ def LoadTimingWindow(mainProgram):
     isPaused = False
     hasClicked = False
 
-    playButton = pygame.image.load("gatePics\PLAY.png")
-    pauseButton = pygame.image.load("gatePics\PAUSE.png")
+    playButton = pygame.image.load(os.path.join(application_path, "gatePics\PLAY.png"))
+    pauseButton = pygame.image.load(os.path.join(application_path, "gatePics\PAUSE.png"))
     playPauseButtonRect = playButton.get_rect()
 
-    clearButton = pygame.image.load("gatePics\CLEAR.png")
+    clearButton = pygame.image.load(os.path.join(application_path, "gatePics\CLEAR.png"))
     clearButtonRect = clearButton.get_rect()
 
     while True:
