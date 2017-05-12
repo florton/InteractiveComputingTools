@@ -2,11 +2,12 @@
 
 block_cipher = None
 
+extra_data = [('gatePics/*.png','gatePics'),('gatePics/freesansbold.ttf','gatePics')]
 
 a = Analysis(['InteractiveLogic.py'],
              pathex=['C:\\Users\\F\\Documents\\GitHub\\InteractiveComputingTools\\InteractiveLogic'],
              binaries=None,
-             datas=None,
+             datas=extra_data,
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
@@ -25,4 +26,4 @@ exe = EXE(pyz,
           debug=False,
           strip=False,
           upx=True,
-          console=True )
+          console=False )
