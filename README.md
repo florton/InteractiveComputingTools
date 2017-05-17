@@ -3,7 +3,7 @@
 ##### Ver: Alpha 1.1
 ##### Created by Flanders Lorton
 
-### Interactive Logic is a python app intended to create logic circuits
+### Interactive Logic is a python app for creating and modeling simple logic circuits
 ### The app should be intuitive and simple to use for new and experienced users
 
 ## Installing and running
