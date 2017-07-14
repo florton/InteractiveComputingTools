@@ -29,7 +29,7 @@ Currently there are no builds for OSX, Win32, or Linux.
 ![FullAdder](http://puu.sh/wJDYs/556acbfcca.png)
 
 #### Adder Truth Table
-![FullAdderTT](http://puu.sh/wJE6w/ef07bc44e9.png)
+![FullAdderTT](http://puu.sh/wJE9K/2a4d952cae.png)
 
 ### J K Flip Flop
 ![FlipFlop](http://puu.sh/wJE27/aaf6d2ba70.png)
