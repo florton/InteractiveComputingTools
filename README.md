@@ -23,19 +23,19 @@ Currently there are no builds for OSX, Win32, or Linux.
 ### Buttons / Layout
 
 ###### Line tool is active when cursor is a diamond. Right click on white space to cancel.  
-![Instructions](http://puu.sh/wJDMh/fd546eb060.png)
+![Instructions](http://puu.sh/wJDRW/944c8c693e.png)
 
 ### Full Adder
-![FullAdder](http://puu.sh/wJDOF/a98120f6f9.png)
+![FullAdder](http://puu.sh/wJDSG/16877921e6.png)
 
 #### Adder Truth Table
-![FullAdderTT](http://puu.sh/wJDP3/68198a8e12.png)
+![FullAdderTT](http://puu.sh/wJDT8/40be8d0fa1.png)
 
 ### J K Flip Flop
-![FlipFlop](http://puu.sh/wJDPB/d098189ad5.png)
+![FlipFlop](http://puu.sh/wJDTM/eac4eea856.png)
 
 #### Flip Flop Timing Diagram
-![FlipFlopTG](http://puu.sh/wJDQ3/d330d7b66d.png)
+![FlipFlopTG](http://puu.sh/wJDUl/ca9f20b7bf.png)
 
 ## Known bugs
 - Dragging either window will disrupt clock output on timing diagrams
