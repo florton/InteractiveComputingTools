@@ -29,13 +29,13 @@ Currently there are no builds for OSX, Win32, or Linux.
 ![FullAdder](http://puu.sh/wJDYs/556acbfcca.png)
 
 #### Adder Truth Table
-![FullAdderTT](http://puu.sh/wJDZQ/63108bfc23.png)
+![FullAdderTT](http://puu.sh/wJE6w/ef07bc44e9.png)
 
 ### J K Flip Flop
 ![FlipFlop](http://puu.sh/wJE27/aaf6d2ba70.png)
 
 #### Flip Flop Timing Diagram
-![FlipFlopTG](http://puu.sh/wJE3P/de7e8cfb9b.png)
+![FlipFlopTG](http://puu.sh/wJE7c/9dd1ef6067.png)
 
 ## Known bugs
 - Dragging either window will disrupt clock output on timing diagrams
