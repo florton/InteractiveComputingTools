@@ -1,6 +1,6 @@
 # Interactive Logic
 
-##### Ver: Alpha 1.1
+##### Ver: Beta 1.1
 ##### Created by Flanders Lorton
 
 ### Interactive Logic is a python app for creating and modeling simple logic circuits
@@ -9,9 +9,9 @@
 ## Installing and running
 Currently there are no builds for OSX, Win32, or Linux.
 
-### Windows 64 Bit executable now added for version Alpha 1.1!
+### Windows 64 Bit executable now added for version Beta 1.1!
 
-##### Just download and run!
+##### Download `InteractiveLogicBeta1_1Winx64exe.zip`, extract, and run!
 
 
 ### Steps for installation from source code:
@@ -37,15 +37,11 @@ Currently there are no builds for OSX, Win32, or Linux.
 #### Flip Flop Timing Diagram
 ![FlipFlopTG](http://puu.sh/wJE7c/9dd1ef6067.png)
 
-## Known bugs
+## Known Issues
 - Dragging either window will disrupt clock output on timing diagrams
 - Pausing timing diagram will not stop clock cycling
-- Some large component loops may be evaluated incorrectly (Speculation)
+- Program resolution is not designed for monitors smaller than 1920x1080 
 
-Please send me a message if you find additional bugs
+Please send me a message if you find additional bugs :)
 
-## Features To Be Added
-- Clear button and timescale on timing diagram
-- Scroll bar for large truth tables
-- Export as Image
-- Custom Re-Usable Components
+`florton@lion.lmu.edu`
