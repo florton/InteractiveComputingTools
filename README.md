@@ -17,7 +17,7 @@ Currently there are no builds for OSX, Win32, or Linux.
 ### Steps for installation from source code:
 1. Install Python 2.7 https://www.python.org/downloads/release/python-2713/
 2. Install Pygame http://www.pygame.org/download.shtml
-3. Download InteractiveLogicAlpha1_1SourceCode.zip
+3. Download InteractiveLogicBeta1_1SourceCode.zip
 4. Unzip and run `python InteractiveLogic.py`
 
 ### Buttons / Layout
