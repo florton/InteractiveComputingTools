@@ -1,5 +1,6 @@
 import sys, pygame, math, os
 from pygame.locals import *
+import pygame.gfxdraw
 from gates import Evaluate
 from generator import GenerateTruthTable, TruthTableError, GenerateTimingDiagram
 from datetime import datetime
@@ -434,7 +435,7 @@ def Main():
                 mouseX,mouseY = event.pos
                 mouseKey = event.buttons
 
-        #Move gate/switch if cursor clicks & drags
+        #Move component if cursor clicks & drags
         if draggingObject and not drawingLine:
             draggingObject[1].topleft = mouseX - clickOffset[0] , mouseY - clickOffset[1]
         elif mouseKey[0] == 1:
@@ -530,11 +531,15 @@ def Main():
         for line in loadedLines:
             color = red if line[4] else lightRed
             start = line[0][2]
+            # Draw line segments between nodes/components
             for x in range(len(line[5])):
                 end = line[5][x][1].center
                 pygame.draw.line(screen, color, start, end, 6)
                 start = end
-            pygame.draw.line(screen, color, start, line[1][2], 6)
+            end = line[1][2]
+            pygame.draw.line(screen, color, start, end, 6)
+            #pygame.gfxdraw.line(screen, start[0], start[1], line[1][2][0], line[1][2][1], color)
+            #pygame.draw.polygon(screen, color, [start, line[1][2]], 6)
             #pygame.draw.aaline(screen, color, line[0][2], line[1][2])
         #Draw Nodes
         for node in loadedNodes:

@@ -5,6 +5,12 @@ from pygame.locals import *
 from gates import Evaluate, BuildTree
 from datetime import datetime
 
+#Extra code for PyInstaller building
+if getattr(sys, 'frozen', False):
+    application_path = sys._MEIPASS
+else:
+    application_path = os.path.dirname(os.path.abspath(__file__))
+
 global white,black, green, red, blue
 white = 255, 255, 255
 black = 0,0,0
